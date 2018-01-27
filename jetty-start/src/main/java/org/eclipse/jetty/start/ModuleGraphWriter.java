@@ -31,17 +31,41 @@ import java.util.List;
 /**
  * Generate a graphviz dot graph of the modules found
  */
-public class ModuleGraphWriter
-{
+public class ModuleGraphWriter {
+    /**
+     * 模块背景色
+     */
     private String colorModuleBg;
+
+    /**
+     * 启用的模块背景色
+     */
     private String colorEnabledBg;
+
+    /**
+     * 过渡背景色
+     */
     private String colorTransitiveBg;
+
+    /**
+     * 单元格背景色
+     */
     private String colorCellBg;
+
+    /**
+     * 头部背景色
+     */
     private String colorHeaderBg;
+
+    /**
+     * 模块文字颜色
+     */
     private String colorModuleFont;
 
-    public ModuleGraphWriter()
-    {
+    /**
+     * 默认配置
+     */
+    public ModuleGraphWriter() {
         colorModuleBg = "#B8FFB8";
         colorEnabledBg = "#66FFCC";
         colorTransitiveBg = "#66CC66";
@@ -50,8 +74,12 @@ public class ModuleGraphWriter
         colorModuleFont = "#888888";
     }
 
-    public void config(Props props)
-    {
+    /**
+     * 进行配置
+     *
+     * @param props
+     */
+    public void config(Props props) {
         String prefix = "jetty.graph.";
         colorModuleBg = getProperty(props,prefix + "color.module.bg",colorModuleBg);
         colorEnabledBg = getProperty(props,prefix + "color.enabled.bg",colorEnabledBg);
@@ -61,26 +89,36 @@ public class ModuleGraphWriter
         colorModuleFont = getProperty(props,prefix + "color.font",colorModuleFont);
     }
 
-    private String getProperty(Props props, String key, String defVal)
-    {
+    /**
+     * 获取属性
+     *
+     * @param props
+     * @param key
+     * @param defVal
+     * @return
+     */
+    private String getProperty(Props props, String key, String defVal) {
         String val = props.getString(key,defVal);
-        if (val == null)
-        {
+        if (val == null) {
             return defVal;
         }
         val = val.trim();
-        if (val.length() <= 0)
-        {
+        if (val.length() <= 0) {
             return defVal;
         }
         return val;
     }
 
-    public void write(Modules modules, Path outputFile) throws IOException
-    {
+    /**
+     * 绘制
+     *
+     * @param modules
+     * @param outputFile
+     * @throws IOException
+     */
+    public void write(Modules modules, Path outputFile) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(outputFile,StandardCharsets.UTF_8,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE); 
-             PrintWriter out = new PrintWriter(writer);)
-        {
+             PrintWriter out = new PrintWriter(writer);) {
             writeHeaderMessage(out,outputFile);
 
             out.println();
@@ -116,8 +154,13 @@ public class ModuleGraphWriter
         }
     }
 
-    private void writeHeaderMessage(PrintWriter out, Path outputFile)
-    {
+    /**
+     * 输出头部信息
+     *
+     * @param out
+     * @param outputFile
+     */
+    private void writeHeaderMessage(PrintWriter out, Path outputFile) {
         out.println("/*");
         out.println(" * GraphViz Graph of Jetty Modules");
         out.println(" * ");
@@ -131,21 +174,37 @@ public class ModuleGraphWriter
         out.println(" */");
     }
 
-    private void writeModuleDetailHeader(PrintWriter out, String header)
-    {
+    /**
+     * 绘制模块头
+     *
+     * @param out
+     * @param header
+     */
+    private void writeModuleDetailHeader(PrintWriter out, String header) {
         writeModuleDetailHeader(out,header,1);
     }
 
-    private void writeModuleDetailHeader(PrintWriter out, String header, int count)
-    {
+    /**
+     * 绘制模块顶部的线
+     *
+     * @param out
+     * @param header
+     * @param count
+     */
+    private void writeModuleDetailHeader(PrintWriter out, String header, int count) {
         out.printf("  <TR>");
         out.printf("<TD BGCOLOR=\"%s\" ALIGN=\"LEFT\"><I>",colorHeaderBg);
         out.printf("%s%s</I></TD>",header,count > 1?"s":"");
         out.println("</TR>");
     }
 
-    private void writeModuleDetailLine(PrintWriter out, String line)
-    {
+    /**
+     * 绘制模块底部的线
+     *
+     * @param out
+     * @param line
+     */
+    private void writeModuleDetailLine(PrintWriter out, String line) {
         out.printf("  <TR>");
         StringBuilder escape = new StringBuilder();
         for(char c: line.toCharArray()) {
@@ -161,16 +220,19 @@ public class ModuleGraphWriter
         out.printf("<TD BGCOLOR=\"%s\" ALIGN=\"LEFT\">%s</TD></TR>%n",colorCellBg,escape.toString());
     }
 
-    private void writeModuleNode(PrintWriter out, Module module, boolean resolved)
-    {
+    /**
+     * 绘制模块节点
+     *
+     * @param out
+     * @param module
+     * @param resolved
+     */
+    private void writeModuleNode(PrintWriter out, Module module, boolean resolved) {
         String color = colorModuleBg;
-        if (module.isEnabled())
-        {
+        if (module.isEnabled()) {
             // specifically enabled by config
             color = colorEnabledBg;
-        }
-        else if (resolved)
-        {
+        } else if (resolved) {
             // enabled by transitive reasons
             color = colorTransitiveBg;
         }
@@ -179,41 +241,32 @@ public class ModuleGraphWriter
         out.printf("<TABLE BORDER=\"0\" CELLBORDER=\"0\" CELLSPACING=\"0\" CELLPADDING=\"2\">%n");
         out.printf("  <TR><TD ALIGN=\"LEFT\"><B>%s</B></TD></TR>%n",module.getName());
 
-        if (module.isEnabled())
-        {
+        if (module.isEnabled()) {
             writeModuleDetailHeader(out,"ENABLED");
-            for (String source : module.getSources())
-            {
+            for (String source : module.getSources()) {
                 writeModuleDetailLine(out,"via: " + source);
             }
-        }
-        else if (resolved)
-        {
+        } else if (resolved) {
             writeModuleDetailHeader(out,"TRANSITIVE");
         }
 
-        if (!module.getXmls().isEmpty())
-        {
+        if (!module.getXmls().isEmpty()) {
             List<String> xmls = module.getXmls();
             writeModuleDetailHeader(out,"XML",xmls.size());
-            for (String xml : xmls)
-            {
+            for (String xml : xmls) {
                 writeModuleDetailLine(out,xml);
             }
         }
 
-        if (!module.getLibs().isEmpty())
-        {
+        if (!module.getLibs().isEmpty()) {
             List<String> libs = module.getLibs();
             writeModuleDetailHeader(out,"LIB",libs.size());
-            for (String lib : libs)
-            {
+            for (String lib : libs) {
                 writeModuleDetailLine(out,lib);
             }
         }
 
-        if (!module.getDefaultConfig().isEmpty())
-        {
+        if (!module.getDefaultConfig().isEmpty()) {
             List<String> inis = module.getDefaultConfig();
             writeModuleDetailHeader(out,"INI Template",inis.size());
         }
@@ -221,24 +274,27 @@ public class ModuleGraphWriter
         out.printf("</TABLE>>];%n");
     }
 
-    private void writeModules(PrintWriter out, Modules allmodules, List<Module> enabled)
-    {
+    /**
+     * 绘制模块
+     *
+     * @param out
+     * @param allmodules
+     * @param enabled
+     */
+    private void writeModules(PrintWriter out, Modules allmodules, List<Module> enabled) {
         out.println();
         out.println("  /* Modules */");
         out.println();
 
         out.println("  node [ labeljust = l ];");
 
-        for (int depth = 0; depth <= allmodules.getMaxDepth(); depth++)
-        {
+        for (int depth = 0; depth <= allmodules.getMaxDepth(); depth++) {
             out.println();
             Collection<Module> depthModules = allmodules.getModulesAtDepth(depth);
-            if (depthModules.size() > 0)
-            {
+            if (depthModules.size() > 0) {
                 out.printf("  /* Level %d */%n",depth);
                 out.println("  { rank = same;");
-                for (Module module : depthModules)
-                {
+                for (Module module : depthModules) {
                     boolean resolved = enabled.contains(module);
                     writeModuleNode(out,module,resolved);
                 }
@@ -247,12 +303,16 @@ public class ModuleGraphWriter
         }
     }
 
-    private void writeRelationships(PrintWriter out, Modules modules, List<Module> enabled)
-    {
-        for (Module module : modules)
-        {
-            for (Module parent : module.getParentEdges())
-            {
+    /**
+     * 绘制相互的关系
+     *
+     * @param out
+     * @param modules
+     * @param enabled
+     */
+    private void writeRelationships(PrintWriter out, Modules modules, List<Module> enabled) {
+        for (Module module : modules) {
+            for (Module parent : module.getParentEdges()) {
                 out.printf("    \"%s\" -> \"%s\";%n",module.getName(),parent.getName());
             }
         }
