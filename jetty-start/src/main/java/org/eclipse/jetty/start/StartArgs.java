@@ -41,26 +41,29 @@ import org.eclipse.jetty.start.config.DirConfigSource;
 
 /**
  * The Arguments required to start Jetty.
+ *
+ * 启动参数
  */
-public class StartArgs
-{
+public class StartArgs {
+    /**
+     * 版本
+     */
     public static final String VERSION;
 
-    static
-    {
+    /**
+     * 静态代码块唯一要做的就是版本
+     */
+    static {
         String ver = System.getProperty("jetty.version",null);
 
-        if (ver == null)
-        {
+        if (ver == null) {
             Package pkg = StartArgs.class.getPackage();
-            if ((pkg != null) && "Eclipse.org - Jetty".equals(pkg.getImplementationVendor()) && (pkg.getImplementationVersion() != null))
-            {
+            if ((pkg != null) && "Eclipse.org - Jetty".equals(pkg.getImplementationVendor()) && (pkg.getImplementationVersion() != null)) {
                 ver = pkg.getImplementationVersion();
             }
         }
 
-        if (ver == null)
-        {
+        if (ver == null) {
             ver = "TEST";
         }
 
@@ -68,128 +71,280 @@ public class StartArgs
         System.setProperty("jetty.version",VERSION);
     }
 
+    /**
+     * xml配置类
+     */
     private static final String SERVER_MAIN = "org.eclipse.jetty.xml.XmlConfiguration";
 
-    /** List of enabled modules */
+    /**
+     * List of enabled modules
+     *
+     * 开启的模块
+     */
     private Set<String> modules = new HashSet<>();
-    /** Map of enabled modules to the source of where that activation occurred */
+
+    /**
+     * Map of enabled modules to the source of where that activation occurred
+     *
+     * 开启模块及其来源
+     */
     private Map<String, List<String>> sources = new HashMap<>();
-    /** Map of properties to where that property was declared */
+
+    /**
+     * Map of properties to where that property was declared
+     *
+     * 属性配置及其来源
+     */
     private Map<String, String> propertySource = new HashMap<>();
-    /** List of all active [files] sections from enabled modules */
+
+    /**
+     * List of all active [files] sections from enabled modules
+     *
+     * 所有激活的文件部分
+     */
     private List<FileArg> files = new ArrayList<>();
-    /** List of all active [lib] sections from enabled modules */
+
+    /**
+     * List of all active [lib] sections from enabled modules
+     *
+     * 所有的lib部分
+     */
     private Classpath classpath;
-    /** List of all active [xml] sections from enabled modules */
+
+    /**
+     * List of all active [xml] sections from enabled modules
+     *
+     * 所有的xml部分
+     */
     private List<Path> xmls = new ArrayList<>();
-    /** JVM arguments, found via commmand line and in all active [exec] sections from enabled modules */
+
+    /**
+     * JVM arguments, found via commmand line and in all active [exec] sections from enabled modules
+     *
+     * jvm参数
+     */
     private List<String> jvmArgs = new ArrayList<>();
 
-    /** List of all xml references found directly on command line or start.ini */
+    /**
+     * List of all xml references found directly on command line or start.ini
+     *
+     * 所有的xml引用
+     */
     private List<String> xmlRefs = new ArrayList<>();
 
-    /** List of all property references found directly on command line or start.ini */
+    /**
+     * List of all property references found directly on command line or start.ini
+     *
+     * 属性引用
+     */
     private List<String> propertyFileRefs = new ArrayList<>();
     
-    /** List of all property files */
+    /**
+     * List of all property files
+     *
+     * 所有的属性文件
+     */
     private List<Path> propertyFiles = new ArrayList<>();
 
+    /**
+     * 属性
+     */
     private Props properties = new Props();
+
+    /**
+     * 系统属性
+     */
     private Set<String> systemPropertyKeys = new HashSet<>();
+
+    /**
+     * 原始库
+     */
     private List<String> rawLibs = new ArrayList<>();
 
     // jetty.base - build out commands
-    /** --add-to-startd=[module,[module]] */
+    /**
+     * --add-to-startd=[module,[module]]
+     *
+     * 添加到配置目录中的启动模块
+     */
     private List<String> addToStartdIni = new ArrayList<>();
-    /** --add-to-start=[module,[module]] */
+
+    /**
+     * --add-to-start=[module,[module]]
+     *
+     * 添加到start.ini中的启动模块
+     */
     private List<String> addToStartIni = new ArrayList<>();
 
     // module inspection commands
-    /** --write-module-graph=[filename] */
+    /**
+     * --write-module-graph=[filename]
+     */
     private String moduleGraphFilename;
 
-    /** Collection of all modules */
+    /**
+     * Collection of all modules
+     *
+     * 所有模块的集合
+     */
     private Modules allModules;
-    /** Should the server be run? */
+
+
+    /**
+     * Should the server be run?
+     *
+     * 是否应该启动服务器
+     */
     private boolean run = true;
+
+    /**
+     * 是否是下载
+     */
     private boolean download = false;
+
+    /**
+     * 是否显示帮助信息
+     */
     private boolean help = false;
+
+    /**
+     * 是否是结束命令
+     */
     private boolean stopCommand = false;
+
+    /**
+     * 是否显示所有模块
+     */
     private boolean listModules = false;
+
+    /**
+     * 是否列举类路径
+     */
     private boolean listClasspath = false;
+
+    /**
+     * 是否列举配置
+     */
     private boolean listConfig = false;
+
+    /**
+     * 是否显示版本信息
+     */
     private boolean version = false;
+
+    /**
+     * 是否测试配置
+     */
     private boolean dryRun = false;
 
+    /**
+     * 是否exec
+     */
     private boolean exec = false;
+
+    /**
+     * 是否同意所有声明
+     */
     private boolean approveAllLicenses = false;
+
+    /**
+     * 测试模式
+     */
     private boolean testingMode = false;
 
-    public StartArgs()
-    {
+    /**
+     * 构造方法
+     */
+    public StartArgs() {
         classpath = new Classpath();
     }
 
-    private void addFile(Module module, String uriLocation)
-    {
+    /**
+     * 添加文件
+     *
+     * @param module
+     * @param uriLocation
+     */
+    private void addFile(Module module, String uriLocation) {
         FileArg arg = new FileArg(module, uriLocation);
-        if (!files.contains(arg))
-        {
+        if (!files.contains(arg)) {
             files.add(arg);
         }
     }
 
-    public void addSystemProperty(String key, String value)
-    {
+    /**
+     * 添加系统配置项
+     *
+     * @param key
+     * @param value
+     */
+    public void addSystemProperty(String key, String value) {
         this.systemPropertyKeys.add(key);
         System.setProperty(key,value);
     }
 
-    private void addUniqueXmlFile(String xmlRef, Path xmlfile) throws IOException
-    {
-        if (!FS.canReadFile(xmlfile))
-        {
+    /**
+     * 添加不同的xml文件
+     *
+     * @param xmlRef
+     * @param xmlfile
+     * @throws IOException
+     */
+    private void addUniqueXmlFile(String xmlRef, Path xmlfile) throws IOException {
+        if (!FS.canReadFile(xmlfile)) {
             throw new IOException("Cannot read file: " + xmlRef);
         }
         xmlfile = FS.toRealPath(xmlfile);
-        if (!xmls.contains(xmlfile))
-        {
+        if (!xmls.contains(xmlfile)) {
             xmls.add(xmlfile);
         }
     }
-    
-    private void addUniquePropertyFile(String propertyFileRef, Path propertyFile) throws IOException
-    {
-        if (!FS.canReadFile(propertyFile))
-        {
+
+    /**
+     * 添加不同的property文件
+     *
+     * @param propertyFileRef
+     * @param propertyFile
+     * @throws IOException
+     */
+    private void addUniquePropertyFile(String propertyFileRef, Path propertyFile) throws IOException {
+        if (!FS.canReadFile(propertyFile)) {
             throw new IOException("Cannot read file: " + propertyFileRef);
         }
         propertyFile = FS.toRealPath(propertyFile);
-        if (!propertyFiles.contains(propertyFile))
-        {
+        if (!propertyFiles.contains(propertyFile)) {
             propertyFiles.add(propertyFile);
         }
     }
 
-    public void dumpActiveXmls(BaseHome baseHome)
-    {
+    /**
+     * 打印所有激活的xml文件
+     *
+     * @param baseHome
+     */
+    public void dumpActiveXmls(BaseHome baseHome) {
         System.out.println();
         System.out.println("Jetty Active XMLs:");
         System.out.println("------------------");
-        if (xmls.isEmpty())
-        {
+        if (xmls.isEmpty()) {
             System.out.println(" (no xml files specified)");
             return;
         }
 
-        for (Path xml : xmls)
-        {
+        for (Path xml : xmls) {
             System.out.printf(" %s%n",baseHome.toShortForm(xml.toAbsolutePath()));
         }
     }
 
-    public void dumpEnvironment(BaseHome baseHome)
-    {
+    /**
+     * 查看环境信息
+     * 主要包含:
+     * 1.Java环境参数
+     * 2.Jetty环境参数
+     *
+     * @param baseHome
+     */
+    public void dumpEnvironment(BaseHome baseHome) {
         // Java Details
         System.out.println();
         System.out.println("Java Environment:");
@@ -218,14 +373,11 @@ public class StartArgs
         System.out.println();
         System.out.println("Config Search Order:");
         System.out.println("--------------------");
-        for (ConfigSource config : baseHome.getConfigSources())
-        {
+        for (ConfigSource config : baseHome.getConfigSources()) {
             System.out.printf(" %s",config.getId());
-            if (config instanceof DirConfigSource)
-            {
+            if (config instanceof DirConfigSource) {
                 DirConfigSource dirsource = (DirConfigSource)config;
-                if (dirsource.isPropertyBased())
-                {
+                if (dirsource.isPropertyBased()) {
                     System.out.printf(" -> %s",dirsource.getDir());
                 }
             }
@@ -236,76 +388,70 @@ public class StartArgs
         System.out.println();
     }
 
-    public void dumpJvmArgs()
-    {
+    /**
+     * 打印JVM参数
+     */
+    public void dumpJvmArgs() {
         System.out.println();
         System.out.println("JVM Arguments:");
         System.out.println("--------------");
-        if (jvmArgs.isEmpty())
-        {
+        if (jvmArgs.isEmpty()) {
             System.out.println(" (no jvm args specified)");
             return;
         }
 
-        for (String jvmArgKey : jvmArgs)
-        {
+        for (String jvmArgKey : jvmArgs) {
             String value = System.getProperty(jvmArgKey);
-            if (value != null)
-            {
+            if (value != null) {
                 System.out.printf(" %s = %s%n",jvmArgKey,value);
-            }
-            else
-            {
+            } else {
                 System.out.printf(" %s%n",jvmArgKey);
             }
         }
     }
 
-    public void dumpProperties()
-    {
+    /**
+     * 打印属性
+     */
+    public void dumpProperties() {
         System.out.println();
         System.out.println("Properties:");
         System.out.println("-----------");
 
         List<String> sortedKeys = new ArrayList<>();
-        for (Prop prop : properties)
-        {
-            if (prop.origin.equals(Props.ORIGIN_SYSPROP))
-            {
+        for (Prop prop : properties) {
+            if (prop.origin.equals(Props.ORIGIN_SYSPROP)) {
                 continue; // skip
             }
             sortedKeys.add(prop.key);
         }
 
-        if (sortedKeys.isEmpty())
-        {
+        if (sortedKeys.isEmpty()) {
             System.out.println(" (no properties specified)");
             return;
         }
 
         Collections.sort(sortedKeys);
 
-        for (String key : sortedKeys)
-        {
+        for (String key : sortedKeys) {
             dumpProperty(key);
         }
     }
 
-    private void dumpProperty(String key)
-    {
+    /**
+     * 打印属性信息
+     *
+     * @param key
+     */
+    private void dumpProperty(String key) {
         Prop prop = properties.getProp(key);
-        if (prop == null)
-        {
+        if (prop == null) {
             System.out.printf(" %s (not defined)%n",key);
-        }
-        else
-        {
+        } else {
             System.out.printf(" %s = %s%n",key,properties.expand(prop.value));
-            if (StartLog.isDebugEnabled())
-            {
+            if (StartLog.isDebugEnabled()) {
                 System.out.printf("   origin: %s%n",prop.origin);
-                while (prop.overrides != null)
-                {
+                while (prop.overrides != null) {
                     prop = prop.overrides;
                     System.out.printf("   (overrides)%n");
                     System.out.printf("     %s = %s%n",key,properties.expand(prop.value));
@@ -315,14 +461,15 @@ public class StartArgs
         }
     }
 
-    public void dumpSystemProperties()
-    {
+    /**
+     * 打印系统属性
+     */
+    public void dumpSystemProperties() {
         System.out.println();
         System.out.println("System Properties:");
         System.out.println("------------------");
 
-        if (systemPropertyKeys.isEmpty())
-        {
+        if (systemPropertyKeys.isEmpty()) {
             System.out.println(" (no system properties specified)");
             return;
         }
@@ -331,36 +478,37 @@ public class StartArgs
         sortedKeys.addAll(systemPropertyKeys);
         Collections.sort(sortedKeys);
 
-        for (String key : sortedKeys)
-        {
+        for (String key : sortedKeys) {
             String value = System.getProperty(key);
             System.out.printf(" %s = %s%n",key,properties.expand(value));
         }
     }
 
-    private void dumpSystemProperty(String key)
-    {
+    /**
+     * 打印单个系统属性
+     *
+     * @param key
+     */
+    private void dumpSystemProperty(String key) {
         System.out.printf(" %s = %s%n",key,System.getProperty(key));
     }
 
     /**
      * Ensure that the System Properties are set (if defined as a System property, or start.config property, or start.ini property)
-     * 
+     *
+     * 确保某个属性被设置
+     *
      * @param key
      *            the key to be sure of
      */
-    private void ensureSystemPropertySet(String key)
-    {
-        if (systemPropertyKeys.contains(key))
-        {
+    private void ensureSystemPropertySet(String key) {
+        if (systemPropertyKeys.contains(key)) {
             return; // done
         }
 
-        if (properties.containsKey(key))
-        {
+        if (properties.containsKey(key)) {
             String val = properties.expand(properties.getString(key));
-            if (val == null)
-            {
+            if (val == null) {
                 return; // no value to set
             }
             // setup system property
@@ -371,15 +519,15 @@ public class StartArgs
 
     /**
      * Expand any command line added <code>--lib</code> lib references.
-     * 
+     *
+     * 扩展库
+     *
      * @param baseHome
      * @throws IOException
      */
-    public void expandLibs(BaseHome baseHome) throws IOException
-    {
+    public void expandLibs(BaseHome baseHome) throws IOException {
         StartLog.debug("Expanding Libs");
-        for (String rawlibref : rawLibs)
-        {
+        for (String rawlibref : rawLibs) {
             StartLog.debug("rawlibref = " + rawlibref);
             String libref = properties.expand(rawlibref);
             StartLog.debug("expanded = " + libref);
@@ -387,8 +535,7 @@ public class StartArgs
             // perform path escaping (needed by windows)
             libref = libref.replaceAll("\\\\([^\\\\])","\\\\\\\\$1");
             
-            for (Path libpath : baseHome.getPaths(libref))
-            {
+            for (Path libpath : baseHome.getPaths(libref)) {
                 classpath.addComponent(libpath.toFile());
             }
         }
@@ -396,97 +543,125 @@ public class StartArgs
 
     /**
      * Build up the Classpath and XML file references based on enabled Module list.
-     * 
+     *
+     * 扩展模块
+     *
      * @param baseHome
      * @param activeModules
      * @throws IOException
      */
-    public void expandModules(BaseHome baseHome, List<Module> activeModules) throws IOException
-    {
+    public void expandModules(BaseHome baseHome, List<Module> activeModules) throws IOException {
         StartLog.debug("Expanding Modules");
-        for (Module module : activeModules)
-        {
+        for (Module module : activeModules) {
             // Find and Expand Libraries
-            for (String rawlibref : module.getLibs())
-            {
+            for (String rawlibref : module.getLibs()) {
                 StartLog.debug("rawlibref = " + rawlibref);
                 String libref = properties.expand(rawlibref);
                 StartLog.debug("expanded = " + libref);
 
-                for (Path libpath : baseHome.getPaths(libref))
-                {
+                for (Path libpath : baseHome.getPaths(libref)) {
                     classpath.addComponent(libpath.toFile());
                 }
             }
 
-            for (String jvmArg : module.getJvmArgs())
-            {
+            for (String jvmArg : module.getJvmArgs()) {
                 exec = true;
                 jvmArgs.add(jvmArg);
             }
 
             // Find and Expand XML files
-            for (String xmlRef : module.getXmls())
-            {
+            for (String xmlRef : module.getXmls()) {
                 // Straight Reference
                 Path xmlfile = baseHome.getPath(xmlRef);
                 addUniqueXmlFile(xmlRef,xmlfile);
             }
 
             // Register Download operations
-            for (String file : module.getFiles())
-            {
+            for (String file : module.getFiles()) {
                 StartLog.debug("Adding module specified file: %s",file);
                 addFile(module,file);
             }
         }
     }
 
-    public List<String> getAddToStartdIni()
-    {
+    /**
+     * 获取添加到start.d下面的配置项
+     *
+     * @return
+     */
+    public List<String> getAddToStartdIni() {
         return addToStartdIni;
     }
 
-    public List<String> getAddToStartIni()
-    {
+    /**
+     * 获取添加到start.ini中的配置项
+     *
+     * @return
+     */
+    public List<String> getAddToStartIni() {
         return addToStartIni;
     }
 
-    public Modules getAllModules()
-    {
+    /**
+     * 获取所有的模块
+     *
+     * @return
+     */
+    public Modules getAllModules() {
         return allModules;
     }
 
-    public Classpath getClasspath()
-    {
+    /**
+     * 获取类路径
+     *
+     * @return
+     */
+    public Classpath getClasspath() {
         return classpath;
     }
 
-    public Set<String> getEnabledModules()
-    {
+    /**
+     * 获取启用的模块
+     *
+     * @return
+     */
+    public Set<String> getEnabledModules() {
         return this.modules;
     }
 
-    public List<FileArg> getFiles()
-    {
+    /**
+     * 获取所有文件
+     *
+     * @return
+     */
+    public List<FileArg> getFiles() {
         return files;
     }
 
-    public List<String> getJvmArgs()
-    {
+    /**
+     * 获取jvm启动参数
+     *
+     * @return
+     */
+    public List<String> getJvmArgs() {
         return jvmArgs;
     }
 
-    public CommandLineBuilder getMainArgs(BaseHome baseHome, boolean addJavaInit) throws IOException
-    {
+    /**
+     * 获取主要参数
+     *
+     * @param baseHome
+     * @param addJavaInit
+     * @return
+     * @throws IOException
+     */
+    public CommandLineBuilder getMainArgs(BaseHome baseHome, boolean addJavaInit) throws IOException {
         CommandLineBuilder cmd = new CommandLineBuilder();
 
-        if (addJavaInit)
-        {
+        if (addJavaInit) {
             cmd.addRawArg(CommandLineBuilder.findJavaBin());
 
-            for (String x : jvmArgs)
-            {
+            for (String x : jvmArgs) {
                 cmd.addRawArg(x);
             }
 
@@ -495,8 +670,7 @@ public class StartArgs
             cmd.addRawArg("-Djetty.base=" + baseHome.getBase());
 
             // System Properties
-            for (String propKey : systemPropertyKeys)
-            {
+            for (String propKey : systemPropertyKeys) {
                 String value = System.getProperty(propKey);
                 cmd.addEqualsArg("-D" + propKey,value);
             }
@@ -507,78 +681,101 @@ public class StartArgs
         }
 
         // Special Stop/Shutdown properties
+        // 特定的关闭和结束属性
         ensureSystemPropertySet("STOP.PORT");
         ensureSystemPropertySet("STOP.KEY");
         ensureSystemPropertySet("STOP.WAIT");
 
         // pass properties as args or as a file
-        if (dryRun || isExec())
-        {
-            for (Prop p : properties)
+        if (dryRun || isExec()) {
+            for (Prop p : properties) {
                 cmd.addRawArg(CommandLineBuilder.quote(p.key)+"="+CommandLineBuilder.quote(p.value));
-        }
-        else if (properties.size() > 0)
-        {
+            }
+        } else if (properties.size() > 0) {
             File prop_file = File.createTempFile("start",".properties");
             prop_file.deleteOnExit();
-            try (FileOutputStream out = new FileOutputStream(prop_file))
-            {
+            try (FileOutputStream out = new FileOutputStream(prop_file)) {
                 properties.store(out,"start.jar properties");
             }
             cmd.addRawArg(prop_file.getAbsolutePath());
         }
 
-        for (Path xml : xmls)
-        {
+        for (Path xml : xmls) {
             cmd.addRawArg(xml.toAbsolutePath().toString());
         }
         
-        for (Path propertyFile : propertyFiles)
-        {
+        for (Path propertyFile : propertyFiles) {
             cmd.addRawArg(propertyFile.toAbsolutePath().toString());
         }
 
         return cmd;
     }
 
-    public String getMainClassname()
-    {
+    /**
+     * 获取启动类的类名
+     *
+     * @return
+     */
+    public String getMainClassname() {
         String mainclass = System.getProperty("jetty.server",SERVER_MAIN);
         return System.getProperty("main.class",mainclass);
     }
 
-    public String getModuleGraphFilename()
-    {
+    /**
+     *
+     *
+     * @return
+     */
+    public String getModuleGraphFilename() {
         return moduleGraphFilename;
     }
 
-    public Props getProperties()
-    {
+    /**
+     * 获取所有属性
+     *
+     * @return
+     */
+    public Props getProperties() {
         return properties;
     }
 
-    public List<String> getSources(String module)
-    {
+    /**
+     * 获取源
+     *
+     * @param module
+     * @return
+     */
+    public List<String> getSources(String module) {
         return sources.get(module);
     }
 
-    public List<Path> getXmlFiles()
-    {
+    /**
+     * 获取xml文件列表
+     *
+     * @return
+     */
+    public List<Path> getXmlFiles() {
         return xmls;
     }
 
-    public boolean hasJvmArgs()
-    {
+    /**
+     * 是否有JVM参数
+     *
+     * @return
+     */
+    public boolean hasJvmArgs() {
         return jvmArgs.size() > 0;
     }
 
-    public boolean hasSystemProperties()
-    {
-        for (String key : systemPropertyKeys)
-        {
+    /**
+     * 是否有系统属性
+     *
+     * @return
+     */
+    public boolean hasSystemProperties() {
+        for (String key : systemPropertyKeys) {
             // ignored keys
-            if ("jetty.home".equals(key) || "jetty.base".equals(key) || "main.class".equals(key))
-            {
+            if ("jetty.home".equals(key) || "jetty.base".equals(key) || "main.class".equals(key)) {
                 // skip
                 continue;
             }
@@ -587,100 +784,159 @@ public class StartArgs
         return false;
     }
 
-    public boolean isApproveAllLicenses()
-    {
+    /**
+     * 是否同意了所有协议
+     *
+     * @return
+     */
+    public boolean isApproveAllLicenses() {
         return approveAllLicenses;
     }
 
-    public boolean isDownload()
-    {
+    /**
+     * 是否是下载任务
+     *
+     * @return
+     */
+    public boolean isDownload() {
         return download;
     }
 
-    public boolean isDryRun()
-    {
+    /**
+     * 是否检测配置项
+     *
+     * @return
+     */
+    public boolean isDryRun() {
         return dryRun;
     }
 
-    public boolean isExec()
-    {
+    /**
+     * 获取exec
+     *
+     * @return
+     */
+    public boolean isExec() {
         return exec;
     }
-    
-    public boolean isNormalMainClass()
-    {
+
+    /**
+     * 是不是正常的main类
+     *
+     * @return
+     */
+    public boolean isNormalMainClass() {
         return SERVER_MAIN.equals(getMainClassname());
     }
 
-    public boolean isHelp()
-    {
+    /**
+     * 是否列举帮助信息
+     *
+     * @return
+     */
+    public boolean isHelp() {
         return help;
     }
 
-    public boolean isListClasspath()
-    {
+    /**
+     * 是否列举类路径
+     *
+     * @return
+     */
+    public boolean isListClasspath() {
         return listClasspath;
     }
 
-    public boolean isListConfig()
-    {
+    /**
+     * 是否列举配置
+     *
+     * @return
+     */
+    public boolean isListConfig() {
         return listConfig;
     }
 
-    public boolean isListModules()
-    {
+    /**
+     * 是否列举版本
+     *
+     * @return
+     */
+    public boolean isListModules() {
         return listModules;
     }
 
-    public boolean isRun()
-    {
+    /**
+     * 是否运行
+     *
+     * @return
+     */
+    public boolean isRun() {
         return run;
     }
 
-    public boolean isStopCommand()
-    {
+    /**
+     * 是不是关闭命令
+     *
+     * @return
+     */
+    public boolean isStopCommand() {
         return stopCommand;
     }
-    
-    public boolean isTestingModeEnabled()
-    {
+
+    /**
+     * 是否开启测试模式
+     *
+     * @return
+     */
+    public boolean isTestingModeEnabled() {
         return testingMode;
     }
 
-    public boolean isVersion()
-    {
+    /**
+     * 是否只列举版本信息
+     *
+     * @return
+     */
+    public boolean isVersion() {
         return version;
     }
 
-    public void parse(ConfigSources sources)
-    {
+    /**
+     * 解析配置源
+     *
+     * @param sources
+     */
+    public void parse(ConfigSources sources) {
         ListIterator<ConfigSource> iter = sources.reverseListIterator();
-        while (iter.hasPrevious())
-        {
+        while (iter.hasPrevious()) {
             ConfigSource source = iter.previous();
-            for (RawArgs.Entry arg : source.getArgs())
-            {
+            for (RawArgs.Entry arg : source.getArgs()) {
                 parse(arg.getLine(),arg.getOrigin());
             }
         }
     }
 
-    public void parse(final String rawarg, String source)
-    {
+    /**
+     * 解析启动参数
+     *
+     * @param rawarg
+     * @param source
+     */
+    public void parse(final String rawarg, String source) {
         parse(rawarg,source,true);
     }
 
     /**
      * Parse a single line of argument.
+     *
+     * 解析一行参数
      * 
      * @param rawarg the raw argument to parse
      * @param source the origin of this line of argument
      * @param replaceProps true if properties in this parse replace previous ones, false to not replace.
      */
-    private void parse(final String rawarg, String source, boolean replaceProps)
-    {
-        if (rawarg == null)
-        {
+    private void parse(final String rawarg, String source, boolean replaceProps) {
+        if (rawarg == null) {
             return;
         }
         
@@ -688,109 +944,109 @@ public class StartArgs
 
         final String arg = rawarg.trim();
 
-        if (arg.length() <= 0)
-        {
+        // 如果没有内容，跳过
+        if (arg.length() <= 0) {
             return;
         }
 
-        if (arg.startsWith("#"))
-        {
+        // #号开头为注释，跳过
+        if (arg.startsWith("#")) {
             return;
         }
 
-        if ("--help".equals(arg) || "-?".equals(arg))
-        {
+        // 打印帮助信息
+        if ("--help".equals(arg) || "-?".equals(arg)) {
             help = true;
             run = false;
             return;
         }
 
-        if ("--debug".equals(arg) || arg.startsWith("--start-log-file"))
-        {
+        // 合法，但是不在这里处理
+        if ("--debug".equals(arg) || arg.startsWith("--start-log-file")) {
             // valid, but handled in StartLog instead
             return;
         }
-        
-        if ("--testing-mode".equals(arg))
-        {
+
+        /**
+         * 测试模式
+         */
+        if ("--testing-mode".equals(arg)) {
             System.setProperty("org.eclipse.jetty.start.testing","true");
             testingMode = true;
             return;
         }
 
-        if (arg.startsWith("--include-jetty-dir="))
-        {
+        // 在配置源中处理
+        if (arg.startsWith("--include-jetty-dir=")) {
             // valid, but handled in ConfigSources instead
             return;
         }
 
-        if ("--stop".equals(arg))
-        {
+        // 关闭
+        if ("--stop".equals(arg)) {
             stopCommand = true;
             run = false;
             return;
         }
 
-        if (arg.startsWith("--download="))
-        {
+        // 下载
+        if (arg.startsWith("--download=")) {
             addFile(null,Props.getValue(arg));
             run = false;
             download = true;
             return;
         }
 
-        if (arg.equals("--create-files"))
-        {
+        // 不运行，创建文件
+        if (arg.equals("--create-files")) {
             run = false;
             download = true;
             return;
         }
 
-        if ("--list-classpath".equals(arg) || "--version".equals(arg) || "-v".equals(arg) || "--info".equals(arg))
-        {
+        // 列举类路径，获取版本，其实都是一样的
+        if ("--list-classpath".equals(arg) || "--version".equals(arg) || "-v".equals(arg) || "--info".equals(arg)) {
             listClasspath = true;
             run = false;
             return;
         }
 
-        if ("--list-config".equals(arg))
-        {
+        // 获取配置
+        if ("--list-config".equals(arg)) {
             listConfig = true;
             run = false;
             return;
         }
 
-        if ("--dry-run".equals(arg) || "--exec-print".equals(arg))
-        {
+        // 测试配置项
+        if ("--dry-run".equals(arg) || "--exec-print".equals(arg)) {
             dryRun = true;
             run = false;
             return;
         }
 
         // Enable forked execution of Jetty server
-        if ("--exec".equals(arg))
-        {
+        //
+        if ("--exec".equals(arg)) {
             exec = true;
             return;
         }
 
         // Enable forked execution of Jetty server
-        if ("--approve-all-licenses".equals(arg))
-        {
+        // 允许所有的协议
+        if ("--approve-all-licenses".equals(arg)) {
             approveAllLicenses = true;
             return;
         }
 
         // Arbitrary Libraries
-        if (arg.startsWith("--lib="))
-        {
+        // 类库
+        if (arg.startsWith("--lib=")) {
             String cp = Props.getValue(arg);
 
-            if (cp != null)
-            {
+            if (cp != null) {
                 StringTokenizer t = new StringTokenizer(cp,File.pathSeparator);
-                while (t.hasMoreTokens())
-                {
+                while (t.hasMoreTokens()) {
                     rawLibs.add(t.nextToken());
                 }
             }
@@ -798,16 +1054,16 @@ public class StartArgs
         }
 
         // Module Management
-        if ("--list-modules".equals(arg))
-        {
+        // 列举所有的模块
+        if ("--list-modules".equals(arg)) {
             listModules = true;
             run = false;
             return;
         }
 
         // jetty.base build-out : add to ${jetty.base}/start.d/
-        if (arg.startsWith("--add-to-startd="))
-        {
+        // 添加到配置项目录中
+        if (arg.startsWith("--add-to-startd=")) {
             List<String> moduleNames = Props.getValues(arg);
             addToStartdIni.addAll(moduleNames);
             run = false;
@@ -816,8 +1072,8 @@ public class StartArgs
         }
 
         // jetty.base build-out : add to ${jetty.base}/start.ini
-        if (arg.startsWith("--add-to-start="))
-        {
+        // 添加到配置项中
+        if (arg.startsWith("--add-to-start=")) {
             List<String> moduleNames = Props.getValues(arg);
             addToStartIni.addAll(moduleNames);
             run = false;
@@ -826,28 +1082,27 @@ public class StartArgs
         }
 
         // Enable a module
-        if (arg.startsWith("--module="))
-        {
+        // 启动模块
+        if (arg.startsWith("--module=")) {
             List<String> moduleNames = Props.getValues(arg);
             enableModules(source,moduleNames);
             return;
         }
 
         // Create graphviz output of module graph
-        if (arg.startsWith("--write-module-graph="))
-        {
+        //
+        if (arg.startsWith("--write-module-graph=")) {
             this.moduleGraphFilename = Props.getValue(arg);
             run = false;
             return;
         }
 
         // Start property (syntax similar to System property)
-        if (arg.startsWith("-D"))
-        {
+        // 启动属性
+        if (arg.startsWith("-D")) {
             String[] assign = arg.substring(2).split("=",2);
             systemPropertyKeys.add(assign[0]);
-            switch (assign.length)
-            {
+            switch (assign.length) {
                 case 2:
                     System.setProperty(assign[0],assign[1]);
                     setProperty(assign[0],assign[1],source,replaceProps);
@@ -863,34 +1118,32 @@ public class StartArgs
         }
 
         // Anything else with a "-" is considered a JVM argument
-        if (arg.startsWith("-"))
-        {
+        // JVM启动参数
+        if (arg.startsWith("-")) {
             // Only add non-duplicates
-            if (!jvmArgs.contains(arg))
-            {
+            // 不会重复添加
+            if (!jvmArgs.contains(arg)) {
                 jvmArgs.add(arg);
             }
             return;
         }
 
         // Is this a raw property declaration?
+        // 原始的属性声明
         int idx = arg.indexOf('=');
-        if (idx >= 0)
-        {
+        if (idx >= 0) {
             String key = arg.substring(0,idx);
             String value = arg.substring(idx + 1);
 
-            if (replaceProps)
-            {
-                if (propertySource.containsKey(key))
-                {
+            // 是否允许覆盖
+            if (replaceProps) {
+                if (propertySource.containsKey(key)) {
                     StartLog.warn("Property %s in %s already set in %s",key,source,propertySource.get(key));
                 }
                 propertySource.put(key,source);
             }
 
-            if ("OPTION".equals(key) || "OPTIONS".equals(key))
-            {
+            if ("OPTION".equals(key) || "OPTIONS".equals(key)) {
                 StringBuilder warn = new StringBuilder();
                 warn.append("The behavior of the argument ");
                 warn.append(arg).append(" (seen in ").append(source);
@@ -905,38 +1158,40 @@ public class StartArgs
         }
 
         // Is this an xml file?
-        if (FS.isXml(arg))
-        {
+        // 是不是xml文件
+        if (FS.isXml(arg)) {
             // only add non-duplicates
-            if (!xmlRefs.contains(arg))
-            {
+            if (!xmlRefs.contains(arg)) {
                 xmlRefs.add(arg);
             }
             return;
         }
-        
-        if (FS.isPropertyFile(arg))
-        {
+
+        // 是不是属性文件
+        if (FS.isPropertyFile(arg)) {
             // only add non-duplicates
-            if (!propertyFileRefs.contains(arg))
-            {
+            if (!propertyFileRefs.contains(arg)) {
                 propertyFileRefs.add(arg);
             }
                 return;
         }
 
         // Anything else is unrecognized
+        // 无法识别的属性
         throw new UsageException(ERR_BAD_ARG,"Unrecognized argument: \"%s\" in %s",arg,source);
     }
 
-    private void enableModules(String source, List<String> moduleNames)
-    {
-        for (String moduleName : moduleNames)
-        {
+    /**
+     * 启用模块
+     *
+     * @param source
+     * @param moduleNames
+     */
+    private void enableModules(String source, List<String> moduleNames) {
+        for (String moduleName : moduleNames) {
             modules.add(moduleName);
             List<String> list = sources.get(moduleName);
-            if (list == null)
-            {
+            if (list == null) {
                 list = new ArrayList<String>();
                 sources.put(moduleName,list);
             }
@@ -944,92 +1199,116 @@ public class StartArgs
         }
     }
 
-    public void parseModule(Module module)
-    {
-        if(module.hasDefaultConfig()) 
-        {
-            for(String line: module.getDefaultConfig())
-            {
+    /**
+     * 解析模块
+     *
+     * @param module
+     */
+    public void parseModule(Module module) {
+        if(module.hasDefaultConfig()) {
+            for(String line: module.getDefaultConfig()) {
                 parse(line,module.getFilesystemRef(),false);
             }
         }
     }
 
-    public void resolveExtraXmls(BaseHome baseHome) throws IOException
-    {
+    /**
+     * 解析额外的xml文件
+     *
+     * @param baseHome
+     * @throws IOException
+     */
+    public void resolveExtraXmls(BaseHome baseHome) throws IOException {
         // Find and Expand XML files
-        for (String xmlRef : xmlRefs)
-        {
+        for (String xmlRef : xmlRefs) {
             // Straight Reference
             Path xmlfile = baseHome.getPath(xmlRef);
-            if (!FS.exists(xmlfile))
-            {
+            if (!FS.exists(xmlfile)) {
                 xmlfile = baseHome.getPath("etc/" + xmlRef);
             }
             addUniqueXmlFile(xmlRef,xmlfile);
         }
     }
-    
-    public void resolvePropertyFiles(BaseHome baseHome) throws IOException
-    {
+
+    /**
+     * 解析属性文件
+     *
+     * @param baseHome
+     * @throws IOException
+     */
+    public void resolvePropertyFiles(BaseHome baseHome) throws IOException {
         // Find and Expand property files
-        for (String propertyFileRef : propertyFileRefs)
-        {
+        for (String propertyFileRef : propertyFileRefs) {
             // Straight Reference
             Path propertyFile = baseHome.getPath(propertyFileRef);
-            if (!FS.exists(propertyFile))
-            {
+            if (!FS.exists(propertyFile)) {
                 propertyFile = baseHome.getPath("etc/" + propertyFileRef);
             }
             addUniquePropertyFile(propertyFileRef,propertyFile);
         }
     }
 
-    public void setAllModules(Modules allModules)
-    {
+    /**
+     * 允许的模块
+     *
+     * @param allModules
+     */
+    public void setAllModules(Modules allModules) {
         this.allModules = allModules;
     }
 
-    private void setProperty(String key, String value, String source, boolean replaceProp)
-    {
+    /**
+     * 设置属性
+     *
+     * @param key
+     * @param value
+     * @param source
+     * @param replaceProp
+     */
+    private void setProperty(String key, String value, String source, boolean replaceProp) {
         // Special / Prevent override from start.ini's
-        if (key.equals("jetty.home"))
-        {
+        // 覆盖start.ini中的配置
+        if (key.equals("jetty.home")) {
             properties.setProperty("jetty.home",System.getProperty("jetty.home"),source);
             return;
         }
 
         // Special / Prevent override from start.ini's
-        if (key.equals("jetty.base"))
-        {
+        // 覆盖start.ini中的配置
+        if (key.equals("jetty.base")) {
             properties.setProperty("jetty.base",System.getProperty("jetty.base"),source);
             return;
         }
 
         // Normal
-        if (replaceProp)
-        {
+        // 其他正常参数
+        if (replaceProp) {
             // always override
             properties.setProperty(key,value,source);
-        }
-        else
-        {
+        } else {
             // only set if unset
-            if (!properties.containsKey(key))
-            {
+            if (!properties.containsKey(key)) {
                 properties.setProperty(key,value,source);
             }
         }
     }
 
-    public void setRun(boolean run)
-    {
+    /**
+     * 设置为启动
+     *
+     * @param run
+     */
+    public void setRun(boolean run) {
         this.run = run;
     }
 
+    /**
+     * 转换为字符串
+     *
+     * @return
+     */
     @Override
-    public String toString()
-    {
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("StartArgs [enabledModules=");
         builder.append(modules);
