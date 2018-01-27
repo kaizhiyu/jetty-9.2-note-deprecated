@@ -25,73 +25,121 @@ import java.util.List;
 
 import org.eclipse.jetty.start.RawArgs.Entry;
 
-public class RawArgs implements Iterable<Entry>
-{
-    public class Entry
-    {
+/**
+ * 原始参数列表
+ *
+ */
+public class RawArgs implements Iterable<Entry> {
+
+    /**
+     * 原始的参数
+     */
+    public class Entry {
+        /**
+         * 行
+         */
         private String line;
+
+        /**
+         * 原始
+         */
         private String origin;
 
-        private Entry(String line, String origin)
-        {
+        /**
+         * 原始参数的个体
+         *
+         * @param line
+         * @param origin
+         */
+        private Entry(String line, String origin) {
             this.line = line;
             this.origin = origin;
         }
 
-        public String getLine()
-        {
+        /**
+         * 获取行
+         *
+         * @return
+         */
+        public String getLine() {
             return line;
         }
 
-        public String getOrigin()
-        {
+        /**
+         * 获取origin
+         *
+         * @return
+         */
+        public String getOrigin() {
             return origin;
         }
 
-        public boolean startsWith(String val)
-        {
+        /**
+         * 是否以某个值开头
+         *
+         * @param val
+         * @return
+         */
+        public boolean startsWith(String val) {
             return line.startsWith(val);
         }
     }
 
     /**
      * All of the args, in argument order
+     *
+     * 所有的参数
      */
     private List<Entry> args = new ArrayList<>();
 
-    public void addAll(List<String> lines, Path sourceFile)
-    {
+    /**
+     * 添加一些参数
+     *
+     * @param lines
+     * @param sourceFile
+     */
+    public void addAll(List<String> lines, Path sourceFile) {
         String source = sourceFile.toAbsolutePath().toString();
-        for (String line : lines)
-        {
+        for (String line : lines) {
             addArg(line,source);
         }
     }
 
-    public void addArg(final String rawline, final String source)
-    {
-        if (rawline == null)
-        {
+    /**
+     * 添加一个参数
+     *
+     * @param rawline
+     * @param source
+     */
+    public void addArg(final String rawline, final String source) {
+        if (rawline == null) {
             return;
         }
 
         String line = rawline.trim();
-        if (line.length() == 0)
-        {
+        if (line.length() == 0) {
             return;
         }
 
         args.add(new Entry(line,source));
     }
 
+    /**
+     * 获取迭代器
+     *
+     * @return
+     */
     @Override
-    public Iterator<Entry> iterator()
-    {
+    public Iterator<Entry> iterator() {
         return args.iterator();
     }
 
-    public int size()
-    {
+    /**
+     * 获取容量
+     *
+     * @return
+     */
+    public int size() {
         return args.size();
     }
 }
