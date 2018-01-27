@@ -23,14 +23,22 @@ import java.nio.file.Path;
 
 /**
  * ${jetty.base} specific ConfigSource
+ *
+ * 特定的JettyBase配置源
  */
-public class JettyBaseConfigSource extends DirConfigSource
-{
-    // Standard weight for ${jetty.base}, so that it comes after command line, and before everything else 
+public class JettyBaseConfigSource extends DirConfigSource {
+
+    // Standard weight for ${jetty.base}, so that it comes after command line, and before everything else
+    // 标准的权重，为0
     private final static int WEIGHT = 0;
-    
-    public JettyBaseConfigSource(Path dir) throws IOException
-    {
+
+    /**
+     * 构造方法
+     *
+     * @param dir
+     * @throws IOException
+     */
+    public JettyBaseConfigSource(Path dir) throws IOException {
         super("${jetty.base}",dir,WEIGHT,true);
     }
 }
