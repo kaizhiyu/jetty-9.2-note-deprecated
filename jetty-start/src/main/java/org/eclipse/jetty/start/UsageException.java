@@ -20,31 +20,71 @@ package org.eclipse.jetty.start;
 
 /**
  * A Usage Error has occured. Print the usage and exit with the appropriate exit code.
+ *
+ * 使用异常
  */
 @SuppressWarnings("serial")
-public class UsageException extends RuntimeException
-{
+public class UsageException extends RuntimeException {
+    /**
+     * 日志错误
+     * 它都是在StartLog类中抛出的
+     */
     public static final int ERR_LOGGING = -1;
+
+    /**
+     * 调用主类错误
+     */
     public static final int ERR_INVOKE_MAIN = -2;
+
+    /**
+     * 退出错误
+     */
     public static final int ERR_NOT_STOPPED = -4;
+
+    /**
+     * 未知错误
+     */
     public static final int ERR_UNKNOWN = -5;
+
+    /**
+     * 参数错误
+     */
     public static final int ERR_BAD_ARG = -6;
+
+    /**
+     * 退出码
+     */
     private int exitCode;
 
-    public UsageException(int exitCode, String format, Object... objs)
-    {
+    /**
+     * 构造方法
+     *
+     * @param exitCode
+     * @param format
+     * @param objs
+     */
+    public UsageException(int exitCode, String format, Object... objs) {
         super(String.format(format,objs));
         this.exitCode = exitCode;
     }
 
-    public UsageException(int exitCode, Throwable cause)
-    {
+    /**
+     * 构造方法
+     *
+     * @param exitCode
+     * @param cause
+     */
+    public UsageException(int exitCode, Throwable cause) {
         super(cause);
         this.exitCode = exitCode;
     }
 
-    public int getExitCode()
-    {
+    /**
+     * 构造方法
+     *
+     * @return
+     */
+    public int getExitCode() {
         return exitCode;
     }
 }

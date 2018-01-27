@@ -22,69 +22,74 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CommandLineBuilder
-{
-    public static File findExecutable(File root, String path)
-    {
+/**
+ * 命令行参数构建者
+ */
+public class CommandLineBuilder {
+    /**
+     * 获取可执行文件
+     */
+    public static File findExecutable(File root, String path) {
         String npath = path.replace('/',File.separatorChar);
         File exe = new File(root,npath);
-        if (!exe.exists())
-        {
+        if (!exe.exists()) {
             return null;
         }
         return exe;
     }
 
-    public static String findJavaBin()
-    {
+    /**
+     * 获取java启动命令
+     *
+     * @return
+     */
+    public static String findJavaBin() {
         File javaHome = new File(System.getProperty("java.home"));
-        if (!javaHome.exists())
-        {
+        if (!javaHome.exists()) {
             return null;
         }
 
         File javabin = findExecutable(javaHome,"bin/java");
-        if (javabin != null)
-        {
+        if (javabin != null) {
             return javabin.getAbsolutePath();
         }
 
         javabin = findExecutable(javaHome,"bin/java.exe");
-        if (javabin != null)
-        {
+        if (javabin != null) {
             return javabin.getAbsolutePath();
         }
 
+        // 相当于一个降级措施
         return "java";
     }
 
     /**
-     * Perform an optional quoting of the argument, being intelligent with spaces and quotes as needed. If a subString is set in quotes it won't the subString
-     * won't be escaped.
-     * 
+     * Perform an optional quoting of the argument, being intelligent with spaces and quotes as needed.
+     * If a subString is set in quotes it won't the subString won't be escaped.
+     *
+     * 转义
+     *
      * @param arg
      * @return
      */
-    public static String quote(String arg)
-    {
+    public static String quote(String arg) {
+        // 如果没有空格或者没有双引号，那么无需转义
         boolean needsQuoting = (arg.indexOf(' ') >= 0) || (arg.indexOf('"') >= 0);
-        if (!needsQuoting)
-        {
+        if (!needsQuoting) {
             return arg;
         }
+
+        // 开始执行转义操作
         StringBuilder buf = new StringBuilder();
         // buf.append('"');
         boolean escaped = false;
         boolean quoted = false;
-        for (char c : arg.toCharArray())
-        {
-            if (!quoted && !escaped && ((c == '"') || (c == ' ')))
-            {
+        for (char c : arg.toCharArray()) {
+            if (!quoted && !escaped && ((c == '"') || (c == ' '))) {
                 buf.append("\\");
             }
             // don't quote text in single quotes
-            if (!escaped && (c == '\''))
-            {
+            if (!escaped && (c == '\'')) {
                 quoted = !quoted;
             }
             escaped = (c == '\\');
@@ -94,15 +99,24 @@ public class CommandLineBuilder
         return buf.toString();
     }
 
+    /**
+     * 字符串列表
+     */
     private List<String> args;
 
-    public CommandLineBuilder()
-    {
+    /**
+     * 构造方法
+     */
+    public CommandLineBuilder() {
         args = new ArrayList<String>();
     }
 
-    public CommandLineBuilder(String bin)
-    {
+    /**
+     * 构造方法
+     *
+     * @param bin
+     */
+    public CommandLineBuilder(String bin) {
         this();
         args.add(bin);
     }
@@ -111,14 +125,15 @@ public class CommandLineBuilder
      * Add a simple argument to the command line.
      * <p>
      * Will quote arguments that have a space in them.
-     * 
+     *
+     * 添加一个简单的命令行
+     * 注意这里要进行转义
+     *
      * @param arg
      *            the simple argument to add
      */
-    public void addArg(String arg)
-    {
-        if (arg != null)
-        {
+    public void addArg(String arg) {
+        if (arg != null) {
             args.add(quote(arg));
         }
     }
@@ -135,20 +150,18 @@ public class CommandLineBuilder
      *   addEqualsArg("-Dstress", null) = "-Dstress"
      *   addEqualsArg("-Dstress", "") = "-Dstress"
      * </pre>
-     * 
+     *
+     * 添加带有等号的命令行参数
+     *
      * @param name
      *            the name
      * @param value
      *            the value
      */
-    public void addEqualsArg(String name, String value)
-    {
-        if ((value != null) && (value.length() > 0))
-        {
+    public void addEqualsArg(String name, String value) {
+        if ((value != null) && (value.length() > 0)) {
             args.add(quote(name + "=" + value));
-        }
-        else
-        {
+        } else {
             args.add(quote(name));
         }
     }
@@ -157,37 +170,50 @@ public class CommandLineBuilder
      * Add a simple argument to the command line.
      * <p>
      * Will <b>NOT</b> quote/escape arguments that have a space in them.
-     * 
+     *
+     * 添加一个原始数据
+     * 这里和addArg最大的区别是它不进行转义
+     *
      * @param arg
      *            the simple argument to add
      */
-    public void addRawArg(String arg)
-    {
-        if (arg != null)
-        {
+    public void addRawArg(String arg) {
+        if (arg != null) {
             args.add(arg);
         }
     }
 
-    public List<String> getArgs()
-    {
+    /**
+     * 获取参数列表
+     *
+     * @return
+     */
+    public List<String> getArgs() {
         return args;
     }
 
+    /**
+     * 转换为字符串
+     *
+     * @return
+     */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return toString(" ");
     }
-  
-    public String toString(String delim)
-    {
+
+    /**
+     * 转换为字符串
+     * 可以定制分隔符
+     *
+     * @param delim
+     * @return
+     */
+    public String toString(String delim) {
         StringBuilder buf = new StringBuilder();
 
-        for (String arg : args)
-        {
-            if (buf.length()>0)
-            {
+        for (String arg : args) {
+            if (buf.length()>0) {
                 buf.append(delim);
             }
             buf.append(quote(arg));
@@ -196,17 +222,17 @@ public class CommandLineBuilder
         return buf.toString();
     }
 
-    public void debug()
-    {
-        if (!StartLog.isDebugEnabled())
-        {
+    /**
+     * 显示调试信息
+     */
+    public void debug() {
+        if (!StartLog.isDebugEnabled()) {
             return;
         }
 
         int len = args.size();
         StartLog.debug("Command Line: %,d entries",args.size());
-        for (int i = 0; i < len; i++)
-        {
+        for (int i = 0; i < len; i++) {
             StartLog.debug(" [%d]: \"%s\"",i,args.get(i));
         }
     }

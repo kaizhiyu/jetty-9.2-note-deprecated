@@ -23,52 +23,73 @@ import java.nio.file.Path;
 
 /**
  * Simple Start .INI handler
+ *
+ * 简单的start.ini处理器
  */
-public class StartIni extends TextFile
-{
+public class StartIni extends TextFile {
+    /**
+     * 基目录
+     */
     private Path basedir;
 
-    public StartIni(Path file) throws IOException
-    {
+    /**
+     * 构造方法
+     *
+     * @param file
+     * @throws IOException
+     */
+    public StartIni(Path file) throws IOException {
         super(file);
     }
 
+    /**
+     * 添加不同的一行
+     *
+     * @param line
+     */
     @Override
-    public void addUniqueLine(String line)
-    {
-        if (line.startsWith("--module="))
-        {
+    public void addUniqueLine(String line) {
+        if (line.startsWith("--module=")) {
+            // 添加目录
             int idx = line.indexOf('=');
             String value = line.substring(idx + 1);
-            for (String part : value.split(","))
-            {
+            for (String part : value.split(",")) {
                 super.addUniqueLine("--module=" + expandBaseDir(part));
             }
-        }
-        else
-        {
+        } else {
             super.addUniqueLine(expandBaseDir(line));
         }
     }
 
-    private String expandBaseDir(String line)
-    {
-        if (line == null)
-        {
+    /**
+     * 扩展目录
+     * 之所以要扩展目录，是因为很多配置中通常只写一个模块名
+     *
+     * @param line
+     * @return
+     */
+    private String expandBaseDir(String line) {
+        if (line == null) {
             return line;
         }
 
         return line.replace("${start.basedir}",basedir.toString());
     }
 
+    /**
+     * 初始化
+     */
     @Override
-    public void init()
-    {
+    public void init() {
         basedir = getFile().getParent().toAbsolutePath();
     }
 
-    public Path getBaseDir()
-    {
+    /**
+     * 获取基目录
+     *
+     * @return
+     */
+    public Path getBaseDir() {
         return basedir;
     }
 }

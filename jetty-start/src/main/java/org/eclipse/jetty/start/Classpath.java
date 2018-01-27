@@ -31,78 +31,109 @@ import java.util.StringTokenizer;
 
 /**
  * Class to handle CLASSPATH construction
+ *
+ * 类路径
  */
-public class Classpath implements Iterable<File>
-{
-    private static class Loader extends URLClassLoader
-    {
-        Loader(URL[] urls, ClassLoader parent)
-        {
+public class Classpath implements Iterable<File> {
+
+    /**
+     * 加载器
+     *
+     */
+    private static class Loader extends URLClassLoader {
+        /**
+         * 构造方法
+         *
+         * @param urls
+         * @param parent
+         */
+        Loader(URL[] urls, ClassLoader parent) {
             super(urls,parent);
         }
 
+        /**
+         * 转换为字符串
+         *
+         * @return
+         */
         @Override
-        public String toString()
-        {
+        public String toString() {
             return "startJarLoader@" + Long.toHexString(hashCode());
         }
     }
 
+    /**
+     * 文件
+     */
     private final List<File> elements = new ArrayList<File>();
 
-    public Classpath()
-    {
+    /**
+     * 构造方法
+     */
+    public Classpath() {
     }
 
-    public Classpath(String initial)
-    {
+    /**
+     * 构造方法
+     *
+     * @param initial
+     */
+    public Classpath(String initial) {
         addClasspath(initial);
     }
 
-    public boolean addClasspath(String s)
-    {
+    /**
+     * 添加路径
+     *
+     * @param s
+     * @return
+     */
+    public boolean addClasspath(String s) {
         boolean added = false;
-        if (s != null)
-        {
+        if (s != null) {
             StringTokenizer t = new StringTokenizer(s,File.pathSeparator);
-            while (t.hasMoreTokens())
-            {
+            while (t.hasMoreTokens()) {
                 added |= addComponent(t.nextToken());
             }
         }
         return added;
     }
 
-    public boolean addComponent(File path)
-    {
+    /**
+     * 添加组件
+     *
+     * @param path
+     * @return
+     */
+    public boolean addComponent(File path) {
         StartLog.debug("Adding classpath component: %s",path);
-        if ((path == null) || (!path.exists()))
-        {
+        if ((path == null) || (!path.exists())) {
             // not a valid component
+            // 不是一个合法的组件
             return false;
         }
 
-        try
-        {
+        try {
             File key = path.getCanonicalFile();
-            if (!elements.contains(key))
-            {
+            if (!elements.contains(key)) {
                 elements.add(key);
                 return true;
             }
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             StartLog.debug(e);
         }
 
         return false;
     }
 
-    public boolean addComponent(String component)
-    {
-        if ((component == null) || (component.length() <= 0))
-        {
+    /**
+     * 添加组件
+     *
+     * @param component
+     * @return
+     */
+    public boolean addComponent(String component) {
+        if ((component == null) || (component.length() <= 0)) {
             // nothing to add
             return false;
         }
@@ -110,94 +141,114 @@ public class Classpath implements Iterable<File>
         return addComponent(new File(component));
     }
 
-    public int count()
-    {
+    /**
+     * 返回元素个数
+     *
+     * @return
+     */
+    public int count() {
         return elements.size();
     }
 
-    public void dump(PrintStream out)
-    {
+    /**
+     * 打印信息
+     *
+     * @param out
+     */
+    public void dump(PrintStream out) {
         int i = 0;
-        for (File element : elements)
-        {
+        for (File element : elements) {
             out.printf("%2d: %s%n",i++,element.getAbsolutePath());
         }
     }
 
-    public ClassLoader getClassLoader()
-    {
+    /**
+     * 获取类加载器
+     *
+     * @return
+     */
+    public ClassLoader getClassLoader() {
         int cnt = elements.size();
         URL[] urls = new URL[cnt];
-        for (int i = 0; i < cnt; i++)
-        {
-            try
-            {
+        for (int i = 0; i < cnt; i++) {
+            try {
                 urls[i] = elements.get(i).toURI().toURL();
                 StartLog.debug("URLClassLoader.url[%d] = %s",i,urls[i]);
-            }
-            catch (MalformedURLException e)
-            {
+            } catch (MalformedURLException e) {
                 StartLog.warn(e);
             }
         }
         StartLog.debug("Loaded %d URLs into URLClassLoader",urls.length);
 
         ClassLoader parent = Thread.currentThread().getContextClassLoader();
-        if (parent == null)
-        {
+        if (parent == null) {
             parent = Classpath.class.getClassLoader();
         }
-        if (parent == null)
-        {
+        if (parent == null) {
             parent = ClassLoader.getSystemClassLoader();
         }
         return new Loader(urls,parent);
     }
 
-    public List<File> getElements()
-    {
+    /**
+     * 获取所有元素
+     *
+     * @return
+     */
+    public List<File> getElements() {
         return elements;
     }
 
-    public boolean isEmpty()
-    {
+    /**
+     * 是否为空
+     *
+     * @return
+     */
+    public boolean isEmpty() {
         return (elements == null) || (elements.isEmpty());
     }
 
+    /**
+     * 获取迭代器
+     *
+     * @return
+     */
     @Override
-    public Iterator<File> iterator()
-    {
+    public Iterator<File> iterator() {
         return elements.iterator();
     }
 
     /**
-     * Overlay another classpath, copying its elements into place on this Classpath, while eliminating duplicate entries on the classpath.
-     * 
+     * Overlay another classpath, copying its elements into place on this Classpath,
+     * while eliminating duplicate entries on the classpath.
+     *
+     * 采用不覆盖的方式来添加
+     *
      * @param other
      *            the other classpath to overlay
      */
-    public void overlay(Classpath other)
-    {
-        for (File otherElement : other.elements)
-        {
-            if (this.elements.contains(otherElement))
-            {
+    public void overlay(Classpath other) {
+        for (File otherElement : other.elements) {
+            if (this.elements.contains(otherElement)) {
                 // Skip duplicate entries
+                // 避免重复内容
                 continue;
             }
             this.elements.add(otherElement);
         }
     }
 
+    /**
+     * 转换为字符串
+     *
+     * @return
+     */
     @Override
-    public String toString()
-    {
+    public String toString() {
         StringBuffer cp = new StringBuffer(1024);
         boolean needDelim = false;
-        for (File element : elements)
-        {
-            if (needDelim)
-            {
+        for (File element : elements) {
+            if (needDelim) {
                 cp.append(File.pathSeparatorChar);
             }
             cp.append(element.getAbsolutePath());
