@@ -23,14 +23,26 @@ import java.nio.file.Path;
 
 /**
  * ${jetty.home} specific ConfigSource
+ *
+ * 特定的${jetty.home}配置
  */
-public class JettyHomeConfigSource extends DirConfigSource
-{
-    // Standard weight for ${jetty.home}, so that it comes after everything else
+public class JettyHomeConfigSource extends DirConfigSource {
+
+    /**
+     * Standard weight for ${jetty.home}, so that it comes after everything else
+     *
+     * 对于${jetty.home}的标准权重
+     * 它在所有其他的配置之后
+     */
     private final static int WEIGHT = 9999999;
 
-    public JettyHomeConfigSource(Path dir) throws IOException
-    {
+    /**
+     * 构造方法
+     *
+     * @param dir
+     * @throws IOException
+     */
+    public JettyHomeConfigSource(Path dir) throws IOException {
         super("${jetty.home}",dir,WEIGHT,false);
     }
 }

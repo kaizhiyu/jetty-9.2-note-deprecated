@@ -121,7 +121,6 @@ public class DirConfigSource implements ConfigSource {
         this.args = new RawArgs();
 
         if (canHaveArgs) {
-
             // 首先处理start.ini
             Path iniFile = dir.resolve("start.ini");
             if (FS.canReadFile(iniFile)) {
