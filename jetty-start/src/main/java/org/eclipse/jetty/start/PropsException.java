@@ -20,22 +20,37 @@ package org.eclipse.jetty.start;
 
 /**
  * An non-recoverable error with Props usage
+ *
+ * 在属性使用上未处理的异常
  */
 @SuppressWarnings("serial")
-public class PropsException extends RuntimeException
-{
-    public PropsException(String message, Throwable cause)
-    {
+public class PropsException extends RuntimeException {
+
+    /**
+     * 构造方法
+     *
+     * @param message
+     * @param cause
+     */
+    public PropsException(String message, Throwable cause) {
         super(message,cause);
     }
 
-    public PropsException(String message)
-    {
+    /**
+     * 构造方法
+     *
+     * @param message
+     */
+    public PropsException(String message) {
         super(message);
     }
 
-    public PropsException(Throwable cause)
-    {
+    /**
+     * 构造方法
+     *
+     * @param cause
+     */
+    public PropsException(Throwable cause) {
         super(cause);
     }
 }

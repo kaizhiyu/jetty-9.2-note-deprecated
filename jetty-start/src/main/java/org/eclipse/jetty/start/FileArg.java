@@ -18,28 +18,54 @@
 
 package org.eclipse.jetty.start;
 
-public class FileArg
-{
+/**
+ * 文件参数
+ */
+public class FileArg {
+    /**
+     * 模块名
+     */
     public final String moduleName;
+
+    /**
+     * 地址
+     */
     public final String uri;
+
+    /**
+     * 位置信息
+     */
     public final String location;
-    
-    public FileArg(final Module module, final String uriLocation)
-    {
+
+    /**
+     * 构造方法
+     *
+     * @param module
+     * @param uriLocation
+     */
+    public FileArg(final Module module, final String uriLocation) {
         this(module == null?(String)null:module.getName(),uriLocation);
     }
-    
-    public FileArg(final String uriLocation)
-    {
+
+    /**
+     * 构造方法
+     *
+     * @param uriLocation
+     */
+    public FileArg(final String uriLocation) {
         this((String)null,uriLocation);
     }
-    
-    private FileArg(final String moduleName, final String uriLocation)
-    {
+
+    /**
+     * 构造方法
+     *
+     * @param moduleName
+     * @param uriLocation
+     */
+    private FileArg(final String moduleName, final String uriLocation) {
         this.moduleName = moduleName;
         String parts[] = uriLocation.split("\\|",3);
-        if (parts.length > 2)
-        {
+        if (parts.length > 2) {
             StringBuilder err = new StringBuilder();
             final String LN = System.lineSeparator();
             err.append("Unrecognized [file] argument: ").append(uriLocation);
@@ -50,62 +76,57 @@ public class FileArg
             err.append(LN).append(" or <uri>|<absolute-path> - eg: http://machine/glob.dat|/opt/run/glob.dat");
             throw new IllegalArgumentException(err.toString());
         }
-        if (parts.length == 2)
-        {
+        if (parts.length == 2) {
             this.uri = parts[0];
             this.location = parts[1];
-        }
-        else
-        {
+        } else {
             this.uri = null;
             this.location = uriLocation;
         }
     }
-    
+
+    /**
+     * 判断是否相等
+     *
+     * @param obj
+     * @return
+     */
     @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj)
-        {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (obj == null)
-        {
+        if (obj == null) {
             return false;
         }
-        if (getClass() != obj.getClass())
-        {
+        if (getClass() != obj.getClass()) {
             return false;
         }
         FileArg other = (FileArg)obj;
-        if (uri == null)
-        {
-            if (other.uri != null)
-            {
+        if (uri == null) {
+            if (other.uri != null) {
                 return false;
             }
-        }
-        else if (!uri.equals(other.uri))
-        {
+        } else if (!uri.equals(other.uri)) {
             return false;
         }
-        if (location == null)
-        {
-            if (other.location != null)
-            {
+        if (location == null) {
+            if (other.location != null) {
                 return false;
             }
-        }
-        else if (!location.equals(other.location))
-        {
+        } else if (!location.equals(other.location)) {
             return false;
         }
         return true;
     }
 
+    /**
+     * 哈希值
+     *
+     * @return
+     */
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = (prime * result) + ((uri == null)?0:uri.hashCode());
@@ -113,9 +134,13 @@ public class FileArg
         return result;
     }
 
+    /**
+     * 转换为字符串
+     *
+     * @return
+     */
     @Override
-    public String toString()
-    {
+    public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("DownloadArg [uri=");
         builder.append(uri);

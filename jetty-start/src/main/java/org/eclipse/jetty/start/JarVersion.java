@@ -33,20 +33,27 @@ import java.util.regex.Pattern;
 
 /**
  * Attempt to determine the version of the Jar File based on common version locations.
+ *
+ * jar的版本
  */
-public class JarVersion
-{
-    private static JarEntry findEntry(JarFile jar, String regex)
-    {
+public class JarVersion {
+
+
+    /**
+     * 获取jar实体
+     *
+     * @param jar
+     * @param regex
+     * @return
+     */
+    private static JarEntry findEntry(JarFile jar, String regex) {
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher;
         Enumeration<JarEntry> en = jar.entries();
-        while (en.hasMoreElements())
-        {
+        while (en.hasMoreElements()) {
             JarEntry entry = en.nextElement();
             matcher = pattern.matcher(entry.getName());
-            if (matcher.matches())
-            {
+            if (matcher.matches()) {
                 return entry;
             }
         }
@@ -54,84 +61,93 @@ public class JarVersion
         return null;
     }
 
-    private static String getBundleVersion(Manifest manifest)
-    {
+    /**
+     * 获取bundle版本
+     *
+     * @param manifest
+     * @return
+     */
+    private static String getBundleVersion(Manifest manifest) {
         Attributes attribs = manifest.getMainAttributes();
-        if (attribs == null)
-        {
+        if (attribs == null) {
             return null;
         }
 
         String version = attribs.getValue("Bundle-Version");
-        if (version == null)
-        {
+        if (version == null) {
             return null;
         }
 
         return stripV(version);
     }
 
-    private static String getMainManifestImplVersion(Manifest manifest)
-    {
+    /**
+     * 获取manifest的版本
+     *
+     * @param manifest
+     * @return
+     */
+    private static String getMainManifestImplVersion(Manifest manifest) {
         Attributes attribs = manifest.getMainAttributes();
-        if (attribs == null)
-        {
+        if (attribs == null) {
             return null;
         }
 
         String version = attribs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-        if (version == null)
-        {
+        if (version == null) {
             return null;
         }
 
         return stripV(version);
     }
 
-    private static String getMavenVersion(JarFile jar) throws IOException
-    {
+    /**
+     * 获取maven的版本
+     *
+     * @param jar
+     * @return
+     * @throws IOException
+     */
+    private static String getMavenVersion(JarFile jar) throws IOException {
         JarEntry pomProp = findEntry(jar,"META-INF/maven/.*/pom\\.properties$");
-        if (pomProp == null)
-        {
+        if (pomProp == null) {
             return null;
         }
 
         InputStream stream = null;
 
-        try
-        {
+        try {
             stream = jar.getInputStream(pomProp);
             Properties props = new Properties();
             props.load(stream);
 
             String version = props.getProperty("version");
-            if (version == null)
-            {
+            if (version == null) {
                 return null;
             }
 
             return stripV(version);
-        }
-        finally
-        {
+        } finally {
             FS.close(stream);
         }
     }
 
-    private static String getSubManifestImplVersion(Manifest manifest)
-    {
+    /**
+     * 获取子manifest的版本
+     *
+     * @param manifest
+     * @return
+     */
+    private static String getSubManifestImplVersion(Manifest manifest) {
         Map<String, Attributes> entries = manifest.getEntries();
 
-        for (Attributes attribs : entries.values())
-        {
-            if (attribs == null)
-            {
+        for (Attributes attribs : entries.values()) {
+            if (attribs == null) {
                 continue; // skip entry
             }
 
             String version = attribs.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-            if (version == null)
-            {
+            if (version == null) {
                 continue; // empty, no value, skip it
             }
 
@@ -141,55 +157,58 @@ public class JarVersion
         return null; // no valid impl version entries found
     }
 
-    public static String getVersion(File file)
-    {
-        try (JarFile jar = new JarFile(file))
-        {
+    /**
+     * 获取版本
+     * 这里是获取一个.jar文件的版本字符串
+     *
+     * @param file
+     * @return
+     */
+    public static String getVersion(File file) {
+        try (JarFile jar = new JarFile(file)) {
             String version = null;
 
             Manifest manifest = jar.getManifest();
-            
-            if (manifest == null)
-            {
+
+            // 未指定
+            if (manifest == null) {
                 return "(none specified)";
             }
 
             version = getMainManifestImplVersion(manifest);
-            if (version != null)
-            {
+            if (version != null) {
                 return version;
             }
 
             version = getSubManifestImplVersion(manifest);
-            if (version != null)
-            {
+            if (version != null) {
                 return version;
             }
 
             version = getBundleVersion(manifest);
-            if (version != null)
-            {
+            if (version != null) {
                 return version;
             }
 
             version = getMavenVersion(jar);
-            if (version != null)
-            {
+            if (version != null) {
                 return version;
             }
 
             return "(none specified)";
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             return "(error: " + e.getClass().getSimpleName() + " " + e.getMessage() + ")";
         }
     }
 
-    private static String stripV(String version)
-    {
-        if (version.charAt(0) == 'v')
-        {
+    /**
+     * 去掉v前缀
+     *
+     * @param version
+     * @return
+     */
+    private static String stripV(String version) {
+        if (version.charAt(0) == 'v') {
             return version.substring(1);
         }
 
