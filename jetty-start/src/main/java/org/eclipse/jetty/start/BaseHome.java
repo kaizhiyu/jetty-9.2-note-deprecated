@@ -46,90 +46,125 @@ import org.eclipse.jetty.start.config.JettyHomeConfigSource;
  * The <code>${jetty.home}</code> directory is where the main Jetty binaries and default configuration is housed.
  * <p>
  * The <code>${jetty.base}</code> directory is where the execution specific configuration and webapps are obtained from.
+ *
+ * 代表了${jetty.home}
+ * 默认情况下，${jetty.base}和${jetty.home}是同一个目录，但是它们可以指向不同的目录
+ *
  */
-public class BaseHome
-{
-    public static class SearchDir
-    {
+public class BaseHome {
+
+    /**
+     * 似乎没有被用到
+     */
+    public static class SearchDir {
         private Path dir;
+
         private String name;
 
-        public SearchDir(String name)
-        {
+        public SearchDir(String name) {
             this.name = name;
         }
 
-        public Path getDir()
-        {
+        public Path getDir() {
             return dir;
         }
 
-        public Path resolve(Path subpath)
-        {
+        public Path resolve(Path subpath) {
             return dir.resolve(subpath);
         }
 
-        public Path resolve(String subpath)
-        {
+        public Path resolve(String subpath) {
             return dir.resolve(FS.separators(subpath));
         }
 
-        public SearchDir setDir(File path)
-        {
-            if (path != null)
-            {
+        public SearchDir setDir(File path) {
+            if (path != null) {
                 return setDir(path.toPath());
             }
             return this;
         }
 
-        public SearchDir setDir(Path path)
-        {
-            if (path != null)
-            {
+        public SearchDir setDir(Path path) {
+            if (path != null) {
                 this.dir = path.toAbsolutePath();
             }
             return this;
         }
 
-        public SearchDir setDir(String path)
-        {
-            if (path != null)
-            {
+        public SearchDir setDir(String path) {
+            if (path != null) {
                 return setDir(FS.toPath(path));
             }
             return this;
         }
 
-        public String toShortForm(Path path)
-        {
+        public String toShortForm(Path path) {
             Path relative = dir.relativize(path);
             return String.format("${%s}%c%s",name,File.separatorChar,relative.toString());
         }
     }
 
+    /**
+     * base目录的属性表示
+     */
     public static final String JETTY_BASE = "jetty.base";
+
+    /**
+     * home目录的属性表示
+     */
     public static final String JETTY_HOME = "jetty.home";
+
+    /**
+     *
+     */
     private final static EnumSet<FileVisitOption> SEARCH_VISIT_OPTIONS = EnumSet.of(FileVisitOption.FOLLOW_LINKS);
 
+    /**
+     * 最大搜索深度
+     */
     private final static int MAX_SEARCH_DEPTH = Integer.getInteger("org.eclipse.jetty.start.searchDepth",10);
 
+    /**
+     * 配置源
+     */
     private final ConfigSources sources;
+
+    /**
+     * 家目录
+     */
     private final Path homeDir;
+
+    /**
+     * 基目录
+     */
     private final Path baseDir;
 
-    public BaseHome() throws IOException
-    {
+    /**
+     * 构造方法
+     *
+     * @throws IOException
+     */
+    public BaseHome() throws IOException {
         this(new String[0]);
     }
 
-    public BaseHome(String cmdLine[]) throws IOException
-    {
+    /**
+     * 构造方法
+     *
+     * @param cmdLine
+     * @throws IOException
+     */
+    public BaseHome(String cmdLine[]) throws IOException {
         this(new CommandLineConfigSource(cmdLine));
     }
 
-    public BaseHome(CommandLineConfigSource cmdLineSource) throws IOException
-    {
+    /**
+     * 构造方法
+     *
+     * @param cmdLineSource
+     * @throws IOException
+     */
+    public BaseHome(CommandLineConfigSource cmdLineSource) throws IOException {
 
         sources = new ConfigSources();
         sources.add(cmdLineSource);
@@ -147,25 +182,23 @@ public class BaseHome
         System.setProperty(JETTY_BASE,baseDir.toAbsolutePath().toString());
     }
 
-    public BaseHome(ConfigSources sources)
-    {
+    /**
+     * 构造方法
+     *
+     * @param sources
+     */
+    public BaseHome(ConfigSources sources) {
         this.sources = sources;
         Path home = null;
         Path base = null;
-        for (ConfigSource source : sources)
-        {
-            if (source instanceof CommandLineConfigSource)
-            {
+        for (ConfigSource source : sources) {
+            if (source instanceof CommandLineConfigSource) {
                 CommandLineConfigSource cmdline = (CommandLineConfigSource)source;
                 home = cmdline.getHomePath();
                 base = cmdline.getBasePath();
-            }
-            else if (source instanceof JettyBaseConfigSource)
-            {
+            } else if (source instanceof JettyBaseConfigSource) {
                 base = ((JettyBaseConfigSource)source).getDir();
-            }
-            else if (source instanceof JettyHomeConfigSource)
-            {
+            } else if (source instanceof JettyHomeConfigSource) {
                 home = ((JettyHomeConfigSource)source).getDir();
             }
         }
@@ -178,44 +211,64 @@ public class BaseHome
         System.setProperty(JETTY_BASE,baseDir.toAbsolutePath().toString());
     }
 
-    public String getBase()
-    {
-        if (baseDir == null)
-        {
+    /**
+     * 获取基目录
+     *
+     * @return
+     */
+    public String getBase() {
+        if (baseDir == null) {
             return null;
         }
         return baseDir.toString();
     }
 
-    public Path getBasePath()
-    {
+    /**
+     * 获取基目录
+     *
+     * @return
+     */
+    public Path getBasePath() {
         return baseDir;
     }
 
     /**
      * Create a {@link Path} reference to some content in <code>"${jetty.base}"</code>
-     * 
+     *
+     * 获取带有基目录的引用
+     *
      * @param path
      *            the path to reference
      * @return the file reference
      */
-    public Path getBasePath(String path)
-    {
+    public Path getBasePath(String path) {
         return baseDir.resolve(path);
     }
 
-    public ConfigSources getConfigSources()
-    {
+    /**
+     * 获取配置源
+     *
+     * @return
+     */
+    public ConfigSources getConfigSources() {
         return this.sources;
     }
 
-    public String getHome()
-    {
+    /**
+     * 获取家目录
+     *
+     * @return
+     */
+    public String getHome() {
         return homeDir.toString();
     }
 
-    public Path getHomePath()
-    {
+    /**
+     * 获取家目录
+     *
+     * @return
+     */
+    public Path getHomePath() {
         return homeDir;
     }
 
@@ -235,26 +288,20 @@ public class BaseHome
      *            the path to get.
      * @return the path reference.
      */
-    public Path getPath(final String path)
-    {
+    public Path getPath(final String path) {
         Path apath = FS.toPath(path);
 
-        if (apath.isAbsolute())
-        {
-            if (FS.exists(apath))
-            {
+        if (apath.isAbsolute()) {
+            if (FS.exists(apath)) {
                 return apath;
             }
         }
 
-        for (ConfigSource source : sources)
-        {
-            if (source instanceof DirConfigSource)
-            {
+        for (ConfigSource source : sources) {
+            if (source instanceof DirConfigSource) {
                 DirConfigSource dirsource = (DirConfigSource)source;
                 Path file = dirsource.getDir().resolve(apath);
-                if (FS.exists(file))
-                {
+                if (FS.exists(file)) {
                     return file;
                 }
             }
@@ -266,7 +313,9 @@ public class BaseHome
 
     /**
      * Search specified Path with pattern and return hits
-     * 
+     *
+     * 搜索路径
+     *
      * @param dir
      *            the path to a directory to start search from
      * @param searchDepth
@@ -277,16 +326,13 @@ public class BaseHome
      * @throws IOException
      *             if unable to search the path
      */
-    public List<Path> getPaths(Path dir, int searchDepth, String pattern) throws IOException
-    {
-        if (PathMatchers.isAbsolute(pattern))
-        {
+    public List<Path> getPaths(Path dir, int searchDepth, String pattern) throws IOException {
+        if (PathMatchers.isAbsolute(pattern)) {
             throw new RuntimeException("Pattern cannot be absolute: " + pattern);
         }
 
         List<Path> hits = new ArrayList<>();
-        if (FS.isValidDirectory(dir))
-        {
+        if (FS.isValidDirectory(dir)) {
             PathMatcher matcher = PathMatchers.getMatcher(pattern);
             PathFinder finder = new PathFinder();
             finder.setFileMatcher(matcher);
@@ -343,6 +389,8 @@ public class BaseHome
      * <li>Recursive searching is limited to 30 levels deep (not configurable)</li>
      * <li>File System loops are detected and skipped</li>
      * </ul>
+     *
+     * 获取路径
      * 
      * @param pattern
      *            the pattern to search.
@@ -350,13 +398,11 @@ public class BaseHome
      * @throws IOException
      *             if error during search operation
      */
-    public List<Path> getPaths(String pattern) throws IOException
-    {
+    public List<Path> getPaths(String pattern) throws IOException {
         StartLog.debug("getPaths('%s')",pattern);
         List<Path> hits = new ArrayList<>();
 
-        if (PathMatchers.isAbsolute(pattern))
-        {
+        if (PathMatchers.isAbsolute(pattern)) {
             // Perform absolute path pattern search
 
             // The root to start search from
@@ -364,8 +410,7 @@ public class BaseHome
             // The matcher for file hits
             PathMatcher matcher = PathMatchers.getMatcher(pattern);
 
-            if (FS.isValidDirectory(root))
-            {
+            if (FS.isValidDirectory(root)) {
                 PathFinder finder = new PathFinder();
                 finder.setIncludeDirsInResults(true);
                 finder.setFileMatcher(matcher);
@@ -373,9 +418,7 @@ public class BaseHome
                 Files.walkFileTree(root,SEARCH_VISIT_OPTIONS,MAX_SEARCH_DEPTH,finder);
                 hits.addAll(finder.getHits());
             }
-        }
-        else
-        {
+        } else {
             // Perform relative path pattern search
             Path relativePath = PathMatchers.getSearchRoot(pattern);
             PathMatcher matcher = PathMatchers.getMatcher(pattern);
@@ -385,16 +428,13 @@ public class BaseHome
 
             // walk config sources backwards ...
             ListIterator<ConfigSource> iter = sources.reverseListIterator();
-            while (iter.hasPrevious())
-            {
+            while (iter.hasPrevious()) {
                 ConfigSource source = iter.previous();
-                if (source instanceof DirConfigSource)
-                {
+                if (source instanceof DirConfigSource) {
                     DirConfigSource dirsource = (DirConfigSource)source;
                     Path dir = dirsource.getDir();
                     Path deepDir = dir.resolve(relativePath);
-                    if (FS.isValidDirectory(deepDir))
-                    {
+                    if (FS.isValidDirectory(deepDir)) {
                         finder.setBase(dir);
                         Files.walkFileTree(deepDir,SEARCH_VISIT_OPTIONS,MAX_SEARCH_DEPTH,finder);
                     }
@@ -408,45 +448,45 @@ public class BaseHome
         return hits;
     }
 
-    public boolean isBaseDifferent()
-    {
+    /**
+     * 是否基目录和家目录不同
+     *
+     * @return
+     */
+    public boolean isBaseDifferent() {
         return homeDir.compareTo(baseDir) != 0;
     }
 
     /**
      * Convenience method for <code>toShortForm(file.toPath())</code>
+     *
+     * 转换为较短的形式
      */
-    public String toShortForm(final File path)
-    {
+    public String toShortForm(final File path) {
         return toShortForm(path.toPath());
     }
 
     /**
      * Replace/Shorten arbitrary path with property strings <code>"${jetty.home}"</code> or <code>"${jetty.base}"</code> where appropriate.
-     * 
+     *
+     * 转换为较短的形式
+     *
      * @param path
      *            the path to shorten
      * @return the potentially shortened path
      */
-    public String toShortForm(final Path path)
-    {
+    public String toShortForm(final Path path) {
         Path apath = path.toAbsolutePath();
 
-        for (ConfigSource source : sources)
-        {
-            if (source instanceof DirConfigSource)
-            {
+        for (ConfigSource source : sources) {
+            if (source instanceof DirConfigSource) {
                 DirConfigSource dirsource = (DirConfigSource)source;
                 Path dir = dirsource.getDir();
-                if (apath.startsWith(dir))
-                {
-                    if (dirsource.isPropertyBased())
-                    {
+                if (apath.startsWith(dir)) {
+                    if (dirsource.isPropertyBased()) {
                         Path relative = dir.relativize(apath);
                         return String.format("%s%c%s",dirsource.getId(),File.separatorChar,relative.toString());
-                    }
-                    else
-                    {
+                    } else {
                         return apath.toString();
                     }
                 }
@@ -458,15 +498,15 @@ public class BaseHome
 
     /**
      * Replace/Shorten arbitrary path with property strings <code>"${jetty.home}"</code> or <code>"${jetty.base}"</code> where appropriate.
-     * 
+     *
+     * 转换为较短的形式
+     *
      * @param path
      *            the path to shorten
      * @return the potentially shortened path
      */
-    public String toShortForm(final String path)
-    {
-        if ((path == null) || (path.charAt(0) == '<'))
-        {
+    public String toShortForm(final String path) {
+        if ((path == null) || (path.charAt(0) == '<')) {
             return path;
         }
 

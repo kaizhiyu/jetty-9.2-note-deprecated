@@ -77,24 +77,36 @@ import org.eclipse.jetty.start.config.CommandLineConfigSource;
  * <li>Normal Startup</li>
  * </li>
  * </ol>
+ *
+ * 启动类
  */
-public class Main
-{
+public class Main {
+    /**
+     * 未同意协议时的退出字符串
+     */
     private static final String EXITING_LICENSE_NOT_ACKNOWLEDGED = "Exiting: license not acknowledged!";
+
+    /**
+     * 退出使用
+     */
     private static final int EXIT_USAGE = 1;
 
-    public static String join(Collection<?> objs, String delim)
-    {
-        if (objs==null)
-        {
+    /**
+     * 拼接
+     *
+     * @param objs
+     * @param delim
+     * @return
+     */
+    public static String join(Collection<?> objs, String delim) {
+        if (objs==null) {
             return "";
         }
         StringBuilder str = new StringBuilder();
+        // 第一个不需要拼接，之后的都需要拼接分隔符
         boolean needDelim = false;
-        for (Object obj : objs)
-        {
-            if (needDelim)
-            {
+        for (Object obj : objs) {
+            if (needDelim) {
                 str.append(delim);
             }
             str.append(obj);
@@ -103,34 +115,44 @@ public class Main
         return str.toString();
     }
 
-    public static void main(String[] args)
-    {
-        try
-        {
+    /**
+     * 启动入口
+     * 它的工作主要就两步:
+     * 1.获取启动参数
+     * 2.执行启动
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
+        try {
             Main main = new Main();
             StartArgs startArgs = main.processCommandLine(args);
             main.start(startArgs);
-        }
-        catch (UsageException e)
-        {
+        } catch (UsageException e) {
             System.err.println(e.getMessage());
             usageExit(e.getCause(),e.getExitCode());
-        }
-        catch (Throwable e)
-        {
+        } catch (Throwable e) {
             usageExit(e,UsageException.ERR_UNKNOWN);
         }
     }
 
-    static void usageExit(int exit)
-    {
+    /**
+     * 使用过程中的退出
+     *
+     * @param exit
+     */
+    static void usageExit(int exit) {
         usageExit(null,exit);
     }
 
-    static void usageExit(Throwable t, int exit)
-    {
-        if (t != null)
-        {
+    /**
+     * 使用过程中的退出
+     *
+     * @param t
+     * @param exit
+     */
+    static void usageExit(Throwable t, int exit) {
+        if (t != null) {
             t.printStackTrace(System.err);
         }
         System.err.println();
@@ -139,32 +161,41 @@ public class Main
         System.exit(exit);
     }
 
+    /**
+     * 家目录
+     */
     private BaseHome baseHome;
+
+    /**
+     * 启动参数
+     */
     private StartArgs startupArgs;
 
-    public Main() throws IOException
-    {
-    }
+    /**
+     * 构造方法
+     *
+     * @throws IOException
+     */
+    public Main() throws IOException { }
 
-    private void copyInThread(final InputStream in, final OutputStream out)
-    {
-        new Thread(new Runnable()
-        {
+    /**
+     * 在线程内拷贝
+     *
+     * @param in
+     * @param out
+     */
+    private void copyInThread(final InputStream in, final OutputStream out) {
+        new Thread(new Runnable() {
             @Override
-            public void run()
-            {
-                try
-                {
+            public void run() {
+                try {
                     byte[] buf = new byte[1024];
                     int len = in.read(buf);
-                    while (len > 0)
-                    {
+                    while (len > 0) {
                         out.write(buf,0,len);
                         len = in.read(buf);
                     }
-                }
-                catch (IOException e)
-                {
+                } catch (IOException e) {
                     // e.printStackTrace();
                 }
             }
@@ -172,84 +203,79 @@ public class Main
         }).start();
     }
 
-    private void initFile(StartArgs args, FileArg farg)
-    {
-        try
-        {
+    /**
+     * 初始化文件
+     *
+     * @param args
+     * @param farg
+     */
+    private void initFile(StartArgs args, FileArg farg) {
+        try {
             Path file = baseHome.getBasePath(farg.location);
             
             StartLog.debug("[init-file] %s module specified file %s",file.toAbsolutePath(),(FS.exists(file)?"[Exists!]":""));
-            if (FS.exists(file))
-            {
+            if (FS.exists(file)) {
                 // file already initialized / downloaded, skip it
+                // 如果已经完成，直接跳过
                 return;
             }
 
-            if (farg.uri!=null)
-            {
+            if (farg.uri!=null) {
                 URL url = new URL(farg.uri);
 
                 StartLog.log("DOWNLOAD", "%s to %s", url, farg.location);
 
                 FS.ensureDirectoryExists(file.getParent());
                 
-                if (args.isTestingModeEnabled())
-                {
+                if (args.isTestingModeEnabled()) {
                     StartLog.log("TESTING MODE", "Skipping download of " + url);
                     return;
                 }
 
                 byte[] buf = new byte[8192];
                 try (InputStream in = url.openStream(); 
-                     OutputStream out = Files.newOutputStream(file,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE))
-                {
-                    while (true)
-                    {
+                     OutputStream out = Files.newOutputStream(file,StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE)) {
+                    while (true) {
                         int len = in.read(buf);
 
-                        if (len > 0)
-                        {
+                        if (len > 0) {
                             out.write(buf,0,len);
                         }
-                        if (len < 0)
-                        {
+                        if (len < 0) {
                             break;
                         }
                     }
                 }
-            }
-            else if (farg.location.endsWith("/"))
-            {
+            } else if (farg.location.endsWith("/")) {
                 StartLog.log("MKDIR",baseHome.toShortForm(file));
                 FS.ensureDirectoryExists(file);
-            }
-            else
-            {
+            } else {
                 String shortRef = baseHome.toShortForm(file);
-                if (args.isTestingModeEnabled())
-                {
+                if (args.isTestingModeEnabled()) {
                     StartLog.log("TESTING MODE","Skipping required file check on: %s",shortRef);
                     return;
                 }
                 StartLog.warn("MISSING: Required file %s",shortRef);
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             StartLog.warn("ERROR: processing %s%n%s",farg,e);
             StartLog.warn(e);
             usageExit(EXIT_USAGE);
         }
     }
 
-    private void dumpClasspathWithVersions(Classpath classpath)
-    {
+    /**
+     * 打印带有版本的类路径信息
+     * 其实就是自己内部的依赖的jar包
+     *
+     * @param classpath
+     */
+    private void dumpClasspathWithVersions(Classpath classpath) {
         StartLog.endStartLog();
         System.out.println();
         System.out.println("Jetty Server Classpath:");
         System.out.println("-----------------------");
-        if (classpath.count() == 0)
-        {
+        if (classpath.count() == 0) {
             System.out.println("No classpath entries and/or version information available show.");
             return;
         }
@@ -259,29 +285,34 @@ public class Main
         System.out.println("      changes to the --module=name command line options will be reflected here.");
 
         int i = 0;
-        for (File element : classpath.getElements())
-        {
+        for (File element : classpath.getElements()) {
             System.out.printf("%2d: %24s | %s\n",i++,getVersion(element),baseHome.toShortForm(element));
         }
     }
 
-    public BaseHome getBaseHome()
-    {
+    /**
+     * 获取家目录
+     *
+     * @return
+     */
+    public BaseHome getBaseHome() {
         return baseHome;
     }
 
-    private String getVersion(File element)
-    {
-        if (element.isDirectory())
-        {
+    /**
+     * 获取版本
+     *
+     * @param element
+     * @return
+     */
+    private String getVersion(File element) {
+        if (element.isDirectory()) {
             return "(dir)";
         }
 
-        if (element.isFile())
-        {
+        if (element.isFile()) {
             String name = element.getName().toLowerCase(Locale.ENGLISH);
-            if (name.endsWith(".jar"))
-            {
+            if (name.endsWith(".jar")) {
                 return JarVersion.getVersion(element);
             }
         }
@@ -289,17 +320,24 @@ public class Main
         return "";
     }
 
-    public void invokeMain(ClassLoader classloader, StartArgs args) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException, IOException
-    {
+    /**
+     * 调用启动方法
+     *
+     * @param classloader
+     * @param args
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws NoSuchMethodException
+     * @throws ClassNotFoundException
+     * @throws IOException
+     */
+    public void invokeMain(ClassLoader classloader, StartArgs args) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException, IOException {
         Class<?> invoked_class = null;
         String mainclass = args.getMainClassname();
 
-        try
-        {
+        try {
             invoked_class = classloader.loadClass(mainclass);
-        }
-        catch (ClassNotFoundException e)
-        {
+        } catch (ClassNotFoundException e) {
             System.out.println("WARNING: Nothing to start, exiting ...");
             StartLog.debug(e);
             usageExit(ERR_INVOKE_MAIN);
@@ -312,8 +350,7 @@ public class Main
         String argArray[] = cmd.getArgs().toArray(new String[0]);
         StartLog.debug("Command Line Args: %s",cmd.toString());
 
-        Class<?>[] method_param_types = new Class[]
-        { argArray.getClass() };
+        Class<?>[] method_param_types = new Class[] { argArray.getClass() };
 
         Method main = invoked_class.getDeclaredMethod("main",method_param_types);
         Object[] method_params = new Object[] { argArray };
@@ -321,8 +358,12 @@ public class Main
         main.invoke(null,method_params);
     }
 
-    public void listConfig(StartArgs args)
-    {
+    /**
+     * 列举配置信息
+     *
+     * @param args
+     */
+    public void listConfig(StartArgs args) {
         StartLog.endStartLog();
         
         // Dump Jetty Home / Base
@@ -344,8 +385,10 @@ public class Main
         args.dumpActiveXmls(baseHome);
     }
 
-    private void listModules(StartArgs args)
-    {
+    /**
+     * 列举可用的模块
+     */
+    private void listModules(StartArgs args) {
         StartLog.endStartLog();
         System.out.println();
         System.out.println("Jetty All Available Modules:");
@@ -365,7 +408,9 @@ public class Main
      * <p>
      * This applies equally for either <code>${jetty.base}/start.ini</code> or
      * <code>${jetty.base}/start.d/${name}.ini</code> 
-     * 
+     *
+     * 构建ini
+     *
      * @param args the arguments of what modules are enabled
      * @param name the name of the module to based the build of the ini
      * @param topLevel 
@@ -373,16 +418,14 @@ public class Main
      * false to create a <code>${jetty.base}/start.d/${name}.ini</code> entry instead.
      * @throws IOException
      */
-    private void buildIni(StartArgs args, String name, boolean topLevel, boolean appendStartIni) throws IOException
-    {        
+    private void buildIni(StartArgs args, String name, boolean topLevel, boolean appendStartIni) throws IOException {
         // Find the start.d relative to the base directory only.
         Path start_d = baseHome.getBasePath("start.d");
 
         // Is this a module?
         Modules modules = args.getAllModules();
         Module module = modules.get(name);
-        if (module == null)
-        {
+        if (module == null) {
             StartLog.warn("ERROR: No known module for %s",name);
             return;
         }
@@ -395,75 +438,56 @@ public class Main
         Path startd_ini = start_d.resolve(name + ".ini");
         String short_startd_ini = baseHome.toShortForm(startd_ini);
         StartIni module_ini = null;
-        if (FS.exists(startd_ini))
-        {
+        if (FS.exists(startd_ini)) {
             module_ini = new StartIni(startd_ini);
-            if (module_ini.getLineMatches(Pattern.compile("--module=(.*, *)*" + name)).size() == 0)
-            {
+            if (module_ini.getLineMatches(Pattern.compile("--module=(.*, *)*" + name)).size() == 0) {
                 StartLog.warn("ERROR: %s is not enabled in %s!",name,short_startd_ini);
                 return;
             }
         }
 
-        if (!args.isApproveAllLicenses())
-        {
-            if (!module.hasFiles(baseHome) && !module.acknowledgeLicense())
-            {
+        if (!args.isApproveAllLicenses()) {
+            if (!module.hasFiles(baseHome) && !module.acknowledgeLicense()) {
                 StartLog.warn(EXITING_LICENSE_NOT_ACKNOWLEDGED);
                 System.exit(1);
             }
         }
         
         boolean buildIni=false;
-        if (module.isEnabled())
-        {
+        if (module.isEnabled()) {
             // is it an explicit request to create an ini file?
-            if (topLevel && !FS.exists(startd_ini) && !appendStartIni)
-            {
+            if (topLevel && !FS.exists(startd_ini) && !appendStartIni) {
                 buildIni=true;
-            }
-            // else is it transitive
-            else if (transitive)
-            {
-                if (module.hasDefaultConfig())
-                {
+            } else if (transitive) {
+                // else is it transitive
+                if (module.hasDefaultConfig()) {
                     buildIni = true;
                     StartLog.info("%-15s initialised transitively",name);
                 }
-            }
-            // else must be initialized explicitly
-            else 
-            {
-                for (String source : module.getSources())
-                {
+            } else {
+                // else must be initialized explicitly
+                for (String source : module.getSources()) {
                     StartLog.info("%-15s initialised in %s",name,baseHome.toShortForm(source));
                 }
             }
-        }
-        else 
-        {
+        } else {
             buildIni=true;
         }
         
         String source = "<transitive>";
 
         // If we need an ini
-        if (buildIni)
-        {
+        if (buildIni) {
             // File BufferedWriter
             BufferedWriter writer = null;
             PrintWriter out = null;
-            try
-            {
-                if (appendStartIni)
-                {
+            try {
+                if (appendStartIni) {
                     source = short_start_ini;
                     StartLog.info("%-15s initialised in %s (appended)",name,source);
                     writer = Files.newBufferedWriter(start_ini,StandardCharsets.UTF_8,StandardOpenOption.CREATE,StandardOpenOption.APPEND);
                     out = new PrintWriter(writer);
-                }
-                else
-                {
+                } else {
                     // Create the directory if needed
                     FS.ensureDirectoryExists(start_d);
                     FS.ensureDirectoryWritable(start_d);
@@ -473,8 +497,7 @@ public class Main
                     out = new PrintWriter(writer);
                 }
 
-                if (appendStartIni)
-                {
+                if (appendStartIni) {
                     out.println();
                 }
                 out.println("# --------------------------------------- ");
@@ -485,15 +508,11 @@ public class Main
                 args.parse("--module=" + name,source);
                 args.parseModule(module);
                 
-                for (String line : module.getDefaultConfig())
-                {
+                for (String line : module.getDefaultConfig()) {
                     out.println(line);
                 }
-            }
-            finally
-            {
-                if (out != null)
-                {
+            } finally {
+                if (out != null) {
                     out.close();
                 }
             }
@@ -502,18 +521,15 @@ public class Main
         modules.enable(name,Collections.singletonList(source));
         
         // Also list other places this module is enabled
-        for (String src : module.getSources())
-        {
+        for (String src : module.getSources()) {
             StartLog.debug("also enabled in: %s",src);
-            if (!short_start_ini.equals(src))
-            {
+            if (!short_start_ini.equals(src)) {
                 StartLog.info("%-15s enabled in     %s",name,baseHome.toShortForm(src));
             }
         }
 
         // Do downloads now
-        for (String file : module.getFiles())
-        {
+        for (String file : module.getFiles()) {
             initFile(args, new FileArg(module,file));
         }
 
@@ -523,13 +539,10 @@ public class Main
         modules.buildGraph();
         
         // process new ini modules
-        if (topLevel)
-        {
+        if (topLevel) {
             List<Module> depends = new ArrayList<>();
-            for (String depend : modules.resolveParentModulesOf(name))
-            {
-                if (!name.equals(depend))
-                {
+            for (String depend : modules.resolveParentModulesOf(name)) {
+                if (!name.equals(depend)) {
                     Module m = modules.get(depend);
                     m.setEnabled(true);
                     depends.add(m);
@@ -538,31 +551,25 @@ public class Main
             Collections.sort(depends,Collections.reverseOrder(new Module.DepthComparator()));
             
             Set<String> done = new HashSet<>(0);
-            while (true)
-            {
+            while (true) {
                 // initialize known dependencies
                 boolean complete=true;
-                for (Module m : depends)
-                {
-                    if (!done.contains(m.getName()))
-                    {
+                for (Module m : depends) {
+                    if (!done.contains(m.getName())) {
                         complete=false;
                         buildIni(args,m.getName(),false,appendStartIni);
                         done.add(m.getName());
                     }
                 }
                 
-                if (complete)
-                {
+                if (complete) {
                     break;
                 }
                 
                 // look for any new ones resolved via expansion
                 depends.clear();
-                for (String depend : modules.resolveParentModulesOf(name))
-                {
-                    if (!name.equals(depend))
-                    {
+                for (String depend : modules.resolveParentModulesOf(name)) {
+                    if (!name.equals(depend)) {
                         Module m = modules.get(depend);
                         m.setEnabled(true);
                         depends.add(m);
@@ -575,17 +582,23 @@ public class Main
 
     /**
      * Convenience for <code>processCommandLine(cmdLine.toArray(new String[cmdLine.size()]))</code>
+     *
+     * 把字符串列表转换为字符串数组
      */
-    public StartArgs processCommandLine(List<String> cmdLine) throws Exception
-    {
+    public StartArgs processCommandLine(List<String> cmdLine) throws Exception {
         return this.processCommandLine(cmdLine.toArray(new String[cmdLine.size()]));
     }
 
-    public StartArgs processCommandLine(String[] cmdLine) throws Exception
-    {
+    /**
+     * 解析命令行参数
+     */
+    public StartArgs processCommandLine(String[] cmdLine) throws Exception {
         // Processing Order is important!
         // ------------------------------------------------------------
         // 1) Configuration Locations
+        // 第一步，配置位置信息
+        // 在BaseHome的构造方法中，它会调用StartLog的实例的initialize方法
+        // 该方法很重要的一步就是关于调试模式和调试日志
         CommandLineConfigSource cmdLineSource = new CommandLineConfigSource(cmdLine);
         baseHome = new BaseHome(cmdLineSource);
 
@@ -597,20 +610,22 @@ public class Main
         // This would be the directory information +
         // the various start inis
         // and then the raw command line arguments
+        // 第二步，解析提供的数据
         StartLog.debug("Parsing collected arguments");
         StartArgs args = new StartArgs();
         args.parse(baseHome.getConfigSources());
 
         // ------------------------------------------------------------
         // 3) Module Registration
+        // 第三步，模块注册
         Modules modules = new Modules(baseHome,args);
         StartLog.debug("Registering all modules");
         modules.registerAll();
 
         // ------------------------------------------------------------
         // 4) Active Module Resolution
-        for (String enabledModule : args.getEnabledModules())
-        {
+        // 第四步，激活模块
+        for (String enabledModule : args.getEnabledModules()) {
             List<String> msources = args.getSources(enabledModule);
             modules.enable(enabledModule,msources);
         }
@@ -623,56 +638,67 @@ public class Main
         
         // ------------------------------------------------------------
         // 5) Lib & XML Expansion / Resolution
+        // 第五步，扩展模块
         args.expandLibs(baseHome);
         args.expandModules(baseHome,activeModules);
 
         // ------------------------------------------------------------
         // 6) Resolve Extra XMLs
+        // 第六步，解析额外的xml
         args.resolveExtraXmls(baseHome);
         
         // ------------------------------------------------------------
-        // 9) Resolve Property Files
+        // 7) Resolve Property Files
+        // 第七步，解析属性文件
         args.resolvePropertyFiles(baseHome);
 
         return args;
     }
 
-    public void start(StartArgs args) throws IOException, InterruptedException
-    {
+    /**
+     * 启动
+     *
+     * @param args
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void start(StartArgs args) throws IOException, InterruptedException {
+        // 输出启动参数
         StartLog.debug("StartArgs: %s",args);
 
         // Get Desired Classpath based on user provided Active Options.
+        // 获取用户提供的选项的期待的类路径
         Classpath classpath = args.getClasspath();
 
+        // 设置类路径
         System.setProperty("java.class.path",classpath.toString());
 
         // Show the usage information and return
-        if (args.isHelp())
-        {
+        // 提供使用帮助，然后退出
+        if (args.isHelp()) {
             usage(true);
         }
 
         // Show the version information and return
-        if (args.isListClasspath())
-        {
+        // 显示版本信息然后退出
+        if (args.isListClasspath()) {
             dumpClasspathWithVersions(classpath);
         }
 
         // Show configuration
-        if (args.isListConfig())
-        {
+        // 显示配置信息
+        if (args.isListConfig()) {
             listConfig(args);
         }
 
         // Show modules
-        if (args.isListModules())
-        {
+        // 查看模块信息
+        if (args.isListModules()) {
             listModules(args);
         }
         
         // Generate Module Graph File
-        if (args.getModuleGraphFilename() != null)
-        {
+        if (args.getModuleGraphFilename() != null) {
             Path outputFile = baseHome.getBasePath(args.getModuleGraphFilename());
             System.out.printf("Generating GraphViz Graph of Jetty Modules at %s%n",baseHome.toShortForm(outputFile));
             ModuleGraphWriter writer = new ModuleGraphWriter();
@@ -681,48 +707,39 @@ public class Main
         }
 
         // Show Command Line to execute Jetty
-        if (args.isDryRun())
-        {
+        if (args.isDryRun()) {
             CommandLineBuilder cmd = args.getMainArgs(baseHome,true);
             System.out.println(cmd.toString(File.separatorChar=='/'?" \\\n":" "));
         }
 
-        if (args.isStopCommand())
-        {
+        if (args.isStopCommand()) {
             doStop(args);
         }
         
         boolean rebuildGraph = false;
 
         // Initialize start.ini
-        for (String module : args.getAddToStartIni())
-        {
+        for (String module : args.getAddToStartIni()) {
             buildIni(args,module,true,true);
             rebuildGraph = true;
         }
 
         // Initialize start.d
-        for (String module : args.getAddToStartdIni())
-        {
+        for (String module : args.getAddToStartdIni()) {
             buildIni(args,module,true,false);
             rebuildGraph = true;
         }
         
-        if (rebuildGraph)
-        {
+        if (rebuildGraph) {
             args.getAllModules().clearMissing();
             args.getAllModules().buildGraph();
         }
         
         // If in --create-files, check licenses
-        if(args.isDownload())
-        {
-            if (!args.isApproveAllLicenses())
-            {
-                for (Module module : args.getAllModules().resolveEnabled())
-                {
-                    if (!module.hasFiles(baseHome) && !module.acknowledgeLicense())
-                    {
+        if(args.isDownload()) {
+            if (!args.isApproveAllLicenses()) {
+                for (Module module : args.getAllModules().resolveEnabled()) {
+                    if (!module.hasFiles(baseHome) && !module.acknowledgeLicense()) {
                         StartLog.warn(EXITING_LICENSE_NOT_ACKNOWLEDGED);
                         System.exit(1);
                     }
@@ -731,39 +748,31 @@ public class Main
         }
 
         // Check ini files for download possibilities
-        for (FileArg arg : args.getFiles())
-        {
+        for (FileArg arg : args.getFiles()) {
             Path file = baseHome.getBasePath(arg.location);
-            if (!FS.exists(file) && args.isDownload())
-            {
+            if (!FS.exists(file) && args.isDownload()) {
                 initFile(args, arg);
             }
 
-            if (!FS.exists(file))
-            {
+            if (!FS.exists(file)) {
                 boolean isDir = arg.location.endsWith("/");
-                if (isDir)
-                {
+                if (isDir) {
                     StartLog.log("MKDIR", baseHome.toShortForm(file));
                     FS.ensureDirectoryExists(file);
                     /* Startup should not fail to run on missing directories.
                      * See Bug #427204
                      */
                     // args.setRun(false);
-                }
-                else
-                {
+                } else {
                     String shortRef = baseHome.toShortForm(file);
-                    if (args.isTestingModeEnabled())
-                    {
+                    if (args.isTestingModeEnabled()) {
                         StartLog.log("TESTING MODE","Skipping required file check on: %s",shortRef);
                         return;
                     }
 
                     StartLog.warn("Missing Required File: %s",baseHome.toShortForm(file));
                     args.setRun(false);
-                    if (arg.uri != null)
-                    {
+                    if (arg.uri != null) {
                         StartLog.warn("  Can be downloaded From: %s",arg.uri);
                         StartLog.warn("  Run start.jar --create-files to download");
                     }
@@ -772,24 +781,23 @@ public class Main
         }
         
         // Informational command line, don't run jetty
-        if (!args.isRun())
-        {
+        // 不需要启动jetty
+        if (!args.isRun()) {
             return;
         }
         
         // execute Jetty in another JVM
-        if (args.isExec())
-        {
+        // 在另一个jvm上启动jetty
+        if (args.isExec()) {
             CommandLineBuilder cmd = args.getMainArgs(baseHome,true);
             cmd.debug();
+            // 进程构建
             ProcessBuilder pbuilder = new ProcessBuilder(cmd.getArgs());
             StartLog.endStartLog();
             final Process process = pbuilder.start();
-            Runtime.getRuntime().addShutdownHook(new Thread()
-            {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
-                public void run()
-                {
+                public void run() {
                     StartLog.debug("Destroying " + process);
                     process.destroy();
                 }
@@ -803,8 +811,7 @@ public class Main
             return;
         }
 
-        if (args.hasJvmArgs() || args.hasSystemProperties())
-        {
+        if (args.hasJvmArgs() || args.hasSystemProperties()) {
             System.err.println("WARNING: System properties and/or JVM args set.  Consider using --dry-run or --exec");
         }
 
@@ -812,141 +819,135 @@ public class Main
         Thread.currentThread().setContextClassLoader(cl);
 
         // Invoke the Main Class
-        try
-        {
+        // 调用主类
+        try {
             invokeMain(cl, args);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             usageExit(e,ERR_INVOKE_MAIN);
         }
     }
 
-    private void doStop(StartArgs args)
-    {
+    /**
+     * 结束
+     *
+     * @param args
+     */
+    private void doStop(StartArgs args) {
         String stopHost = args.getProperties().getString("STOP.HOST");
         int stopPort = Integer.parseInt(args.getProperties().getString("STOP.PORT"));
         String stopKey = args.getProperties().getString("STOP.KEY");
 
-        if (args.getProperties().getString("STOP.WAIT") != null)
-        {
+        if (args.getProperties().getString("STOP.WAIT") != null) {
             int stopWait = Integer.parseInt(args.getProperties().getString("STOP.WAIT"));
 
             stop(stopHost,stopPort,stopKey,stopWait);
-        }
-        else
-        {
+        } else {
             stop(stopHost,stopPort,stopKey);
         }
     }
 
     /**
      * Stop a running jetty instance.
+     *
+     * 结束
      */
     public void stop(String host, int port, String key)
     {
         stop(host,port,key,0);
     }
 
-    public void stop(String host, int port, String key, int timeout)
-    {
-        if (host==null || host.length()==0)
+    /**
+     * 结束
+     *
+     * @param host
+     * @param port
+     * @param key
+     * @param timeout
+     */
+    public void stop(String host, int port, String key, int timeout) {
+        // 默认为本机
+        if (host==null || host.length()==0) {
             host="127.0.0.1";
+        }
         
-        try
-        {
-            if (port <= 0)
-            {
+        try {
+            if (port <= 0) {
                 System.err.println("STOP.PORT system property must be specified");
             }
-            if (key == null)
-            {
+            if (key == null) {
                 key = "";
                 System.err.println("STOP.KEY system property must be specified");
                 System.err.println("Using empty key");
             }
 
-            try (Socket s = new Socket(InetAddress.getByName(host),port))
-            {
-                if (timeout > 0)
-                {
+            try (Socket s = new Socket(InetAddress.getByName(host),port)) {
+                if (timeout > 0) {
                     s.setSoTimeout(timeout * 1000);
                 }
 
-                try (OutputStream out = s.getOutputStream())
-                {
+                try (OutputStream out = s.getOutputStream()) {
                     out.write((key + "\r\nstop\r\n").getBytes());
                     out.flush();
 
-                    if (timeout > 0)
-                    {
+                    if (timeout > 0) {
                         System.err.printf("Waiting %,d seconds for jetty to stop%n",timeout);
                         LineNumberReader lin = new LineNumberReader(new InputStreamReader(s.getInputStream()));
                         String response;
-                        while ((response = lin.readLine()) != null)
-                        {
+                        while ((response = lin.readLine()) != null) {
                             StartLog.debug("Received \"%s\"",response);
-                            if ("Stopped".equals(response))
-                            {
+                            if ("Stopped".equals(response)) {
                                 StartLog.warn("Server reports itself as Stopped");
                             }
                         }
                     }
                 }
             }
-        }
-        catch (SocketTimeoutException e)
-        {
+        } catch (SocketTimeoutException e) {
             System.err.println("Timed out waiting for stop confirmation");
             System.exit(ERR_UNKNOWN);
-        }
-        catch (ConnectException e)
-        {
+        } catch (ConnectException e) {
             usageExit(e,ERR_NOT_STOPPED);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             usageExit(e,ERR_UNKNOWN);
         }
     }
 
-    public void usage(boolean exit)
-    {
+    /**
+     * 使用帮助
+     *
+     * @param exit
+     */
+    public void usage(boolean exit) {
         StartLog.endStartLog();
-        if(!printTextResource("org/eclipse/jetty/start/usage.txt"))
-        {
+        if(!printTextResource("org/eclipse/jetty/start/usage.txt")) {
             System.err.println("ERROR: detailed usage resource unavailable");
         }
-        if (exit)
-        {
+        if (exit) {
             System.exit(EXIT_USAGE);
         }
     }
-    
-    public static boolean printTextResource(String resourceName)
-    {
+
+    /**
+     * 打印文本资源
+     *
+     * @param resourceName
+     * @return
+     */
+    public static boolean printTextResource(String resourceName) {
         boolean resourcePrinted = false;
-        try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName))
-        {
-            if (stream != null)
-            {
-                try (InputStreamReader reader = new InputStreamReader(stream); BufferedReader buf = new BufferedReader(reader))
-                {
+        try (InputStream stream = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName)) {
+            if (stream != null) {
+                try (InputStreamReader reader = new InputStreamReader(stream); BufferedReader buf = new BufferedReader(reader)) {
                     resourcePrinted = true;
                     String line;
-                    while ((line = buf.readLine()) != null)
-                    {
+                    while ((line = buf.readLine()) != null) {
                         System.out.println(line);
                     }
                 }
-            }
-            else
-            {
+            } else {
                 System.out.println("Unable to find resource: " + resourceName);
             }
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             StartLog.warn(e);
         }
 
@@ -955,34 +956,44 @@ public class Main
 
     // ------------------------------------------------------------
     // implement Apache commons daemon (jsvc) lifecycle methods (init, start, stop, destroy)
-    public void init(String[] args) throws Exception
-    {
-        try
-        {
+
+    /**
+     * 初始化
+     *
+     * @param args
+     * @throws Exception
+     */
+    public void init(String[] args) throws Exception {
+        try {
             startupArgs = processCommandLine(args);
-        }
-        catch (UsageException e)
-        {
+        } catch (UsageException e) {
             System.err.println(e.getMessage());
             usageExit(e.getCause(),e.getExitCode());
-        }
-        catch (Throwable e)
-        {
+        } catch (Throwable e) {
             usageExit(e,UsageException.ERR_UNKNOWN);
         }
     }
 
-    public void start() throws Exception
-    {
+    /**
+     * 启动
+     *
+     * @throws Exception
+     */
+    public void start() throws Exception {
         start(startupArgs);
     }
 
-    public void stop() throws Exception
-    {
+    /**
+     * 结束
+     *
+     * @throws Exception
+     */
+    public void stop() throws Exception {
         doStop(startupArgs);
     }
 
-    public void destroy()
-    {
-    }
+    /**
+     * 销毁
+     */
+    public void destroy() { }
 }
