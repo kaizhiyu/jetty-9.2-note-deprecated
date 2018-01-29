@@ -28,38 +28,47 @@ import org.eclipse.jetty.http.PathMap;
 /**
  * Abstract rule that use a {@link PathMap} for pattern matching. It uses the 
  * servlet pattern syntax.
+ *
+ * 模式匹配规则
  */
-public abstract class PatternRule extends Rule
-{
+public abstract class PatternRule extends Rule {
+
+    /**
+     * 模式
+     */
     protected String _pattern;
 
 
     /* ------------------------------------------------------------ */
-    public String getPattern()
-    {
+
+    /**
+     * 获取模式
+     *
+     * @return
+     */
+    public String getPattern() {
         return _pattern;
     }
 
     /* ------------------------------------------------------------ */
     /**
      * Sets the rule pattern.
+     *
+     * 设置模式
      * 
      * @param pattern the pattern
      */
-    public void setPattern(String pattern)
-    {
+    public void setPattern(String pattern) {
         _pattern = pattern;
     }
 
     /* ------------------------------------------------------------ */
-    /* (non-Javadoc)
-     * @see org.eclipse.jetty.server.server.handler.rules.RuleBase#matchAndApply(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /**
+     * 匹配并且执行
      */
     @Override
-    public String matchAndApply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException
-    {
-        if (PathMap.match(_pattern, target))
-        {
+    public String matchAndApply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (PathMap.match(_pattern, target)) {
             return apply(target,request, response);
         }
         return null;
@@ -67,6 +76,9 @@ public abstract class PatternRule extends Rule
 
     /* ------------------------------------------------------------ */
     /** Apply the rule to the request
+     *
+     * 对规则进行调用
+     *
      * @param target field to attempt match
      * @param request request object
      * @param response response object
@@ -77,10 +89,11 @@ public abstract class PatternRule extends Rule
 
     /**
      * Returns the rule pattern.
+     *
+     * 返回路由模式
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return super.toString()+"["+_pattern+"]";                
     }
 }

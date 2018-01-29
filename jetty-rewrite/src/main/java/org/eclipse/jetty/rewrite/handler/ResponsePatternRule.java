@@ -25,26 +25,39 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Sends the response code whenever the rule finds a match.
+ *
+ * 响应码匹配规则
  */
-public class ResponsePatternRule extends PatternRule
-{
+public class ResponsePatternRule extends PatternRule {
+
+    /**
+     * 响应码
+     */
     private String _code;
+
+    /**
+     * 原因
+     */
     private String _reason = "";
 
     /* ------------------------------------------------------------ */
-    public ResponsePatternRule()
-    {
+
+    /**
+     * 构造方法
+     */
+    public ResponsePatternRule() {
         _handling = true;
         _terminating = true;
     }
 
     /* ------------------------------------------------------------ */
     /**
+     * 设置响应码
+     *
      * Sets the response status code. 
      * @param code response code
      */
-    public void setCode(String code)
-    {
+    public void setCode(String code) {
         _code = code;
     }
 
@@ -52,31 +65,27 @@ public class ResponsePatternRule extends PatternRule
     /**
      * Sets the reason for the response status code. Reasons will only reflect
      * if the code value is greater or equal to 400.
-     * 
+     *
+     * 设置原因
+     *
      * @param reason
      */
-    public void setReason(String reason)
-    {
+    public void setReason(String reason) {
         _reason = reason;
     }
 
     /* ------------------------------------------------------------ */
-    /*
-     * (non-Javadoc)
-     * @see org.eclipse.jetty.server.server.handler.rules.RuleBase#apply(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /**
+     * 处理
      */
     @Override
-    public String apply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException
-    {
+    public String apply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException {
         int code = Integer.parseInt(_code);
 
         // status code 400 and up are error codes
-        if (code >= 400)
-        {
+        if (code >= 400) {
             response.sendError(code, _reason);
-        }
-        else
-        {
+        } else {
             response.setStatus(code);
         }
         return target;
@@ -85,10 +94,11 @@ public class ResponsePatternRule extends PatternRule
     /* ------------------------------------------------------------ */
     /**
      * Returns the code and reason string.
+     *
+     * 返回错误码和原因
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return super.toString()+"["+_code+","+_reason+"]";
     }
 }
