@@ -28,40 +28,58 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * Abstract rule to use as a base class for rules that match with a regular expression.
+ *
+ * 正则表达式规则
  */
-public abstract class RegexRule extends Rule
-{
+public abstract class RegexRule extends Rule {
+
+    /**
+     * 正则表达式
+     */
     protected Pattern _regex; 
 
     /* ------------------------------------------------------------ */
     /**
      * Sets the regular expression string used to match with string URI.
-     * 
+     *
+     * 设置规则字符串
+     *
      * @param regex the regular expression.
      */
-    public void setRegex(String regex)
-    {
+    public void setRegex(String regex) {
         _regex=Pattern.compile(regex);
     }
 
     /* ------------------------------------------------------------ */
     /**
+     * 获取规则
+     *
      * @return get the regular expression
      */
-    public String getRegex()
-    {
-        return _regex==null?null:_regex.pattern();
+    public String getRegex() {
+        return _regex == null ? null : _regex.pattern();
     }
     
 
     /* ------------------------------------------------------------ */
+
+    /**
+     * 匹配并且执行
+     *
+     * @param target The target of the request
+     * @param request
+     * @param response
+     *
+     * @return
+     * @throws IOException
+     */
     @Override
-    public String matchAndApply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException
-    {
+    public String matchAndApply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException {
         Matcher matcher=_regex.matcher(target);
         boolean matches = matcher.matches();
-        if (matches)
+        if (matches) {
             return apply(target,request,response, matcher);
+        }
         return null;
     }
 
@@ -69,6 +87,9 @@ public abstract class RegexRule extends Rule
     /** 
      * Apply this rule to the request/response pair.
      * Called by {@link #matchAndApply(String, HttpServletRequest, HttpServletResponse)} if the regex matches.
+     *
+     * 执行
+     *
      * @param target field to attempt match
      * @param request request object
      * @param response response object
@@ -82,10 +103,11 @@ public abstract class RegexRule extends Rule
     /* ------------------------------------------------------------ */
     /**
      * Returns the regular expression string.
+     *
+     * 返回字符串格式
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return super.toString()+"["+_regex+"]";
     }
 }

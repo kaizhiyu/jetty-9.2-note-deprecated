@@ -34,16 +34,37 @@ import org.eclipse.jetty.server.Request;
  * and query string component.  The replacement query string may also contain $Q, which 
  * is replaced with the original query string. 
  * The returned target contains only the path.
+ *
+ * 通过正则表达式来重写URI
+ * 它可以通过$n来替换第n个组
+ * 如果替换的字符串包含?这个字符，它会被分割为path和query两部分
+ * 我们可以用$Q来替代query部分
+ * 返回的对象只包含path部分
+ *
  */
-public class RewriteRegexRule extends RegexRule  implements Rule.ApplyURI
-{
+public class RewriteRegexRule extends RegexRule  implements Rule.ApplyURI {
+
+    /**
+     * 替换
+     */
     private String _replacement;
+
+    /**
+     * 查询字符串部分
+     */
     private String _query;
+
+    /**
+     * 是否有查询内容
+     */
     private boolean _queryGroup;
 
     /* ------------------------------------------------------------ */
-    public RewriteRegexRule()
-    {
+
+    /**
+     * 构造方法
+     */
+    public RewriteRegexRule() {
         _handling = false;
         _terminating = false;
     }
@@ -51,43 +72,45 @@ public class RewriteRegexRule extends RegexRule  implements Rule.ApplyURI
     /* ------------------------------------------------------------ */
     /**
      * Whenever a match is found, it replaces with this value.
+     *
+     * 当发现匹配的内容时，它用该值去替换
      * 
      * @param replacement the replacement string.
      */
-    public void setReplacement(String replacement)
-    {
-        String[] split=replacement.split("\\?",2);
+    public void setReplacement(String replacement) {
+        String[] split = replacement.split("\\?",2);
         _replacement = split[0];
-        _query=split.length==2?split[1]:null;
-        _queryGroup=_query!=null && _query.contains("$Q");
+        _query = split.length == 2 ? split[1] : null;
+        _queryGroup = _query != null && _query.contains("$Q");
     }
 
 
     /* ------------------------------------------------------------ */
-    /* (non-Javadoc)
-     * @see org.eclipse.jetty.server.handler.rules.RegexRule#apply(javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.util.regex.Matcher)
+    /**
+     * 执行
+     *
      */
     @Override
-    public String apply(String target, HttpServletRequest request, HttpServletResponse response, Matcher matcher) throws IOException
-    {
+    public String apply(String target, HttpServletRequest request, HttpServletResponse response, Matcher matcher) throws IOException {
         target=_replacement;
         String query=_query;
-        for (int g=1;g<=matcher.groupCount();g++)
-        {
-            String group=matcher.group(g);
-            if (group==null)
-                group="";
-            else
+        for (int g = 1; g <= matcher.groupCount(); g++) {
+            String group = matcher.group(g);
+            if (group == null) {
+                group = "";
+            } else {
                 group = Matcher.quoteReplacement(group);
-            target=target.replaceAll("\\$"+g,group);
-            if (query!=null)
-                query=query.replaceAll("\\$"+g,group);
+            }
+            target = target.replaceAll("\\$" + g, group);
+            if (query!=null) {
+                query=query.replaceAll("\\$" + g, group);
+            }
         }
 
-        if (query!=null)
-        {
-            if (_queryGroup)
-                query=query.replace("$Q",request.getQueryString()==null?"":request.getQueryString());
+        if (query!=null) {
+            if (_queryGroup) {
+                query=query.replace("$Q", request.getQueryString() == null ? "" : request.getQueryString());
+            }
             request.setAttribute("org.eclipse.jetty.rewrite.handler.RewriteRegexRule.Q",query);
         }
         
@@ -95,20 +118,27 @@ public class RewriteRegexRule extends RegexRule  implements Rule.ApplyURI
     }
 
     /* ------------------------------------------------------------ */
+
+    /**
+     * 匹配URI
+     * 该方法在RuleContainer中被调用
+     *
+     * @param request
+     * @param oldURI
+     * @param newURI
+     * @throws IOException
+     */
     @Override
-    public void applyURI(Request request, String oldURI, String newURI) throws IOException
-    {
-        if (_query==null)
-        {
+    public void applyURI(Request request, String oldURI, String newURI) throws IOException {
+        if (_query == null) {
             request.setRequestURI(newURI);
-        }
-        else
-        {
-            String query=(String)request.getAttribute("org.eclipse.jetty.rewrite.handler.RewriteRegexRule.Q");
+        } else {
+            String query = (String)request.getAttribute("org.eclipse.jetty.rewrite.handler.RewriteRegexRule.Q");
             
-            if (!_queryGroup && request.getQueryString()!=null)
-                query=request.getQueryString()+"&"+query;
-            HttpURI uri=new HttpURI(newURI+"?"+query);
+            if (!_queryGroup && request.getQueryString()!=null) {
+                query = request.getQueryString()+"&"+query;
+            }
+            HttpURI uri = new HttpURI(newURI+"?"+query);
             request.setUri(uri);
             request.setRequestURI(newURI);
             request.setQueryString(query);
@@ -118,10 +148,11 @@ public class RewriteRegexRule extends RegexRule  implements Rule.ApplyURI
     /* ------------------------------------------------------------ */
     /**
      * Returns the replacement string.
+     *
+     * 返回替换字符串
      */
     @Override
-    public String toString()
-    {
+    public String toString() {
         return super.toString()+"["+_replacement+"]";
     }
 }
