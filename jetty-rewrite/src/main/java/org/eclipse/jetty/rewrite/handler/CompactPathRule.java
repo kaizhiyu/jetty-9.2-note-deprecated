@@ -27,30 +27,53 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.util.URIUtil;
 
 /**
- * Rewrite the URI by compacting to remove // 
+ * Rewrite the URI by compacting to remove //
+ *
+ * 兼容处理
+ * 它可以移除多于的末尾的斜线
  */
-public class CompactPathRule extends Rule implements Rule.ApplyURI
-{
-    public CompactPathRule()
-    {
+public class CompactPathRule extends Rule implements Rule.ApplyURI {
+
+    /**
+     * 构造方法
+     */
+    public CompactPathRule() {
         _handling = false;
         _terminating = false;
     }
 
+    /**
+     * 处理URI
+     *
+     * @param request
+     * @param oldURI
+     * @param newURI
+     * @throws IOException
+     */
     @Override
-    public void applyURI(Request request, String oldURI, String newURI) throws IOException
-    {
+    public void applyURI(Request request, String oldURI, String newURI) throws IOException {
         String uri = request.getRequestURI();
-        if (uri.startsWith("/"))
+        if (uri.startsWith("/")) {
             uri = URIUtil.compactPath(uri);
+        }
         request.setRequestURI(uri);
     }
 
+    /**
+     * 匹配并且处理
+     *
+     * @param target The target of the request
+     * @param request
+     * @param response
+     *
+     * @return
+     * @throws IOException
+     */
     @Override
-    public String matchAndApply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException
-    {
-        if (target.startsWith("/"))
+    public String matchAndApply(String target, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (target.startsWith("/")) {
             return URIUtil.compactPath(target);
+        }
         return target;
     }
 }

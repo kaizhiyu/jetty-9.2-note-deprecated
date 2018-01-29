@@ -23,11 +23,14 @@ import org.eclipse.jetty.util.component.LifeCycle;
 
 /**
  * Object responsible for providing {@link App}s to the {@link DeploymentManager}
+ *
+ * 把应用提交给部署管理器
  */
-public interface AppProvider extends LifeCycle
-{
+public interface AppProvider extends LifeCycle {
     /**
      * Set the Deployment Manager
+     *
+     * 设置部署管理器
      * 
      * @param deploymentManager
      * @throws IllegalStateException
@@ -37,6 +40,9 @@ public interface AppProvider extends LifeCycle
     
     /* ------------------------------------------------------------ */
     /** Create a ContextHandler for an App
+     *
+     * 为应用创建一个应用处理器
+     *
      * @param app The App
      * @return A ContextHandler
      * @throws IOException

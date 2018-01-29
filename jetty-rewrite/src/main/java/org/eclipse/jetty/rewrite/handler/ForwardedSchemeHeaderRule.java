@@ -29,30 +29,53 @@ import org.eclipse.jetty.server.Request;
  * Set the scheme for the request 
  *
  * 
- * 
+ * 转到另一个模式的请求头处理规则
  */
 public class ForwardedSchemeHeaderRule extends HeaderRule {
+
+    /**
+     * 默认为https
+     */
     private String _scheme="https";
 
     /* ------------------------------------------------------------ */
-    public String getScheme() 
-    {
+
+    /**
+     * 获取协议
+     *
+     * @return
+     */
+    public String getScheme() {
         return _scheme;
     }
 
     /* ------------------------------------------------------------ */
     /**
+     * 设置协议
+     *
      * @param scheme the scheme to set on the request. Defaults to "https"
      */
-    public void setScheme(String scheme)
-    {
+    public void setScheme(String scheme) {
         _scheme = scheme;
     }
     
     /* ------------------------------------------------------------ */
+
+    /**
+     * 处理
+     *
+     * @param target
+     *                field to attempt match
+     * @param value
+     *                header value found
+     * @param request
+     *                request object
+     * @param response
+     *                response object
+     * @return
+     */
     @Override
-    protected String apply(String target, String value, HttpServletRequest request, HttpServletResponse response) 
-    {
+    protected String apply(String target, String value, HttpServletRequest request, HttpServletResponse response) {
         ((Request) request).setScheme(_scheme);
         return target;
     }    
