@@ -27,67 +27,95 @@ import org.eclipse.jetty.util.StringUtil;
 /**
  * ThreadLocal Date formatters for HTTP style dates.
  *
+ * 日期生成器
  */
-public class DateGenerator
-{
+public class DateGenerator {
+
+    /**
+     * 时区
+     */
     private static final TimeZone __GMT = TimeZone.getTimeZone("GMT");
-    static
-    {
+
+
+    static {
         __GMT.setID("GMT");
     }
-    
-    static final String[] DAYS =
-        { "Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    static final String[] MONTHS =
-        { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan"};
+
+    /**
+     * 一周的七天
+     * 注意这里两个周六
+     */
+    static final String[] DAYS = { "Sat", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+
+    /**
+     * 一年中的十二个月份
+     * 注意这里两个一月
+     */
+    static final String[] MONTHS = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan"};
 
 
-    private static final ThreadLocal<DateGenerator> __dateGenerator =new ThreadLocal<DateGenerator>()
-    {
+    /**
+     * 在ThreadLocal内保存日期
+     */
+    private static final ThreadLocal<DateGenerator> __dateGenerator =new ThreadLocal<DateGenerator>() {
         @Override
-        protected DateGenerator initialValue()
-        {
+        protected DateGenerator initialValue() {
             return new DateGenerator();
         }
     };
 
 
-    public final static String __01Jan1970=DateGenerator.formatDate(0);
+    /**
+     * 时间戳开始的时间
+     */
+    public final static String __01Jan1970 = DateGenerator.formatDate(0);
     
     /**
      * Format HTTP date "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+     *
+     * 格式化时间
      */
-    public static String formatDate(long date)
-    {
+    public static String formatDate(long date) {
         return __dateGenerator.get().doFormatDate(date);
     }
 
     /**
      * Format "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'" for cookies
+     *
+     * 从时间戳格式化cookie的日期
      */
-    public static void formatCookieDate(StringBuilder buf, long date)
-    {
+    public static void formatCookieDate(StringBuilder buf, long date) {
         __dateGenerator.get().doFormatCookieDate(buf,date);
     }
 
     /**
      * Format "EEE, dd-MMM-yyyy HH:mm:ss 'GMT'" for cookies
+     *
+     * 从时间戳格式化cookie的日期
      */
-    public static String formatCookieDate(long date)
-    {
+    public static String formatCookieDate(long date) {
         StringBuilder buf = new StringBuilder(28);
         formatCookieDate(buf, date);
         return buf.toString();
     }
-    
+
+    /**
+     * 字符串数据缓存
+     */
     private final StringBuilder buf = new StringBuilder(32);
+
+
+    /**
+     * 格林尼治时间日历
+     */
     private final GregorianCalendar gc = new GregorianCalendar(__GMT);
 
     /**
      * Format HTTP date "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
+     *
+     * 对日期进行格式化
      */
-    public String doFormatDate(long date)
-    {
+    public String doFormatDate(long date) {
         buf.setLength(0);
         gc.setTimeInMillis(date);
 
@@ -125,9 +153,10 @@ public class DateGenerator
 
     /**
      * Format "EEE, dd-MMM-yy HH:mm:ss 'GMT'" for cookies
+     *
+     * 格式化时间
      */
-    public void doFormatCookieDate(StringBuilder buf, long date)
-    {
+    public void doFormatCookieDate(StringBuilder buf, long date) {
         gc.setTimeInMillis(date);
 
         int day_of_week = gc.get(Calendar.DAY_OF_WEEK);
