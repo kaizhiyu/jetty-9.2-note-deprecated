@@ -18,4 +18,7 @@
 
 package org.eclipse.jetty.webapp;
 
+/**
+ * 元数据解析是否完成
+ */
 public enum MetaDataComplete {NotSet, True, False}
