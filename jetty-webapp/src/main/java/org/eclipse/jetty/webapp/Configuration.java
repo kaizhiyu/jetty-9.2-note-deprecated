@@ -30,16 +30,24 @@ import org.eclipse.jetty.util.annotation.Name;
 /* ------------------------------------------------------------------------------- */
 /** Base Class for WebApplicationContext Configuration.
  * This class can be extended to customize or extend the configuration
- * of the WebApplicationContext. 
+ * of the WebApplicationContext.
+ *
+ * 对web应用上下文配置的基类
  */
-public interface Configuration 
-{
+public interface Configuration {
+
+    /**
+     * 属性名
+     */
     public final static String ATTR="org.eclipse.jetty.webapp.configuration";
     
     /* ------------------------------------------------------------------------------- */
     /** Set up for configuration.
      * <p>
      * Typically this step discovers configuration resources
+     *
+     * 在执行配置前
+     *
      * @param context The context to configure
      * @throws Exception
      */
@@ -51,6 +59,9 @@ public interface Configuration
      * <p>
      * Typically this step applies the discovered configuration resources to
      * either the {@link WebAppContext} or the associated {@link MetaData}.
+     *
+     * 执行配置
+     *
      * @param context The context to configure
      * @throws Exception
      */
@@ -59,6 +70,9 @@ public interface Configuration
     
     /* ------------------------------------------------------------------------------- */
     /** Clear down after configuration.
+     *
+     * 执行配置后
+     *
      * @param context The context to configure
      * @throws Exception
      */
@@ -68,6 +82,9 @@ public interface Configuration
     /** DeConfigure WebApp.
      * This method is called to undo all configuration done. This is
      * called to allow the context to work correctly over a stop/start cycle
+     *
+     * 取消配置
+     *
      * @param context The context to configure
      * @throws Exception
      */
@@ -77,6 +94,9 @@ public interface Configuration
     /** Destroy WebApp.
      * This method is called to destroy a webappcontext. It is typically called when a context 
      * is removed from a server handler hierarchy by the deployer.
+     *
+     * 销毁
+     *
      * @param context The context to configure
      * @throws Exception
      */
@@ -88,15 +108,21 @@ public interface Configuration
      * <p>
      * Configure an instance of a WebAppContext, based on a template WebAppContext that 
      * has previously been configured by this Configuration.
+     *
+     * 克隆配置
+     *
      * @param template The template context
      * @param context The context to configure
      * @throws Exception
      */
     public void cloneConfigure (WebAppContext template, WebAppContext context) throws Exception;
-    
-    
-    public class ClassList extends ArrayList<String>
-    {        
+
+
+    /**
+     * 类列表
+     * 它是数组列表的一种更加细化的情况
+     */
+    public class ClassList extends ArrayList<String> {
         /* ------------------------------------------------------------ */
         /** Get/Set/Create the server default Configuration ClassList.
          * <p>Get the class list from: a Server bean; or the attribute (which can
@@ -104,15 +130,18 @@ public interface Configuration
          * with default configuration classes.</p>
          * <p>This method also adds the obtained ClassList instance as a dependent bean
          * on the server and clears the attribute</p>
+         *
+         * 设置默认的类列表
+         *
          * @param server The server the default is for
          * @return the server default ClassList instance of the configuration classes for this server. Changes to this list will change the server default instance.
          */
-        public static ClassList setServerDefault(Server server)
-        {
-            ClassList cl=server.getBean(ClassList.class);
-            if (cl!=null)
+        public static ClassList setServerDefault(Server server) {
+            ClassList cl = server.getBean(ClassList.class);
+            if (cl!=null) {
                 return cl;
-            cl=serverDefault(server);
+            }
+            cl = serverDefault(server);
             server.addBean(cl);
             server.setAttribute(ATTR,null);
             return cl;
@@ -123,49 +152,71 @@ public interface Configuration
          * <p>Get the class list from: a Server bean; or the attribute (which can
          * either be a ClassList instance or an String[] of class names); or a new instance
          * with default configuration classes.
+         *
+         * 获取默认的配置类列表
+         * 类列表可以是:
+         * 1.Server Bean
+         * 2.ClassList实例或者类名列表
+         * 3.默认配置类
+         *
          * @param server The server the default is for
          * @return A copy of the server default ClassList instance of the configuration classes for this server. Changes to the returned list will not change the server default.
          */
-        public static ClassList serverDefault(Server server)
-        {
+        public static ClassList serverDefault(Server server) {
             ClassList cl=server.getBean(ClassList.class);
-            if (cl!=null)
+            if (cl!=null) {
                 return new ClassList(cl);
+            }
             Object attr = server.getAttribute(ATTR);
-            if (attr instanceof ClassList)
+            if (attr instanceof ClassList) {
                 return new ClassList((ClassList)attr);
-            if (attr instanceof String[])
+            }
+            if (attr instanceof String[]) {
                 return new ClassList((String[])attr);
+            }
             return new ClassList();
         }
-        
-        public ClassList()
-        {
+
+        /**
+         * 构造方法
+         */
+        public ClassList() {
             this(WebAppContext.DEFAULT_CONFIGURATION_CLASSES);
         }
-        
-        public ClassList(String[] classes)
-        {
+
+        /**
+         * 构造方法
+         *
+         * @param classes
+         */
+        public ClassList(String[] classes) {
             addAll(Arrays.asList(classes));
         }
 
-        public ClassList(List<String> classes)
-        {
+        /**
+         * 构造方法
+         *
+         * @param classes
+         */
+        public ClassList(List<String> classes) {
             addAll(classes);
         }
-        
-        public void addAfter(@Name("afterClass") String afterClass,@Name("configClass")String... configClass)
-        {
-            if (configClass!=null && afterClass!=null)
-            {
+
+        /**
+         * 在某个类之后添加
+         *
+         * @param afterClass
+         * @param configClass
+         */
+        public void addAfter(@Name("afterClass") String afterClass,@Name("configClass")String... configClass) {
+            if (configClass!=null && afterClass!=null) {
                 ListIterator<String> iter = listIterator();
-                while (iter.hasNext())
-                {
+                while (iter.hasNext()) {
                     String cc=iter.next();
-                    if (afterClass.equals(cc))
-                    {
-                        for (int i=0;i<configClass.length;i++)
+                    if (afterClass.equals(cc)) {
+                        for (int i=0;i<configClass.length;i++) {
                             iter.add(configClass[i]);
+                        }
                         return;
                     }
                 }
@@ -173,19 +224,22 @@ public interface Configuration
             throw new IllegalArgumentException("afterClass '"+afterClass+"' not found in "+this);
         }
 
-        public void addBefore(@Name("beforeClass") String beforeClass,@Name("configClass")String... configClass)
-        {
-            if (configClass!=null && beforeClass!=null)
-            {
+        /**
+         * 在某个类之前添加
+         *
+         * @param beforeClass
+         * @param configClass
+         */
+        public void addBefore(@Name("beforeClass") String beforeClass,@Name("configClass")String... configClass) {
+            if (configClass!=null && beforeClass!=null) {
                 ListIterator<String> iter = listIterator();
-                while (iter.hasNext())
-                {
+                while (iter.hasNext()) {
                     String cc=iter.next();
-                    if (beforeClass.equals(cc))
-                    {
+                    if (beforeClass.equals(cc)) {
                         iter.previous();
-                        for (int i=0;i<configClass.length;i++)
+                        for (int i = 0; i<configClass.length; i++) {
                             iter.add(configClass[i]);
+                        }
                         return;
                     }
                 }
