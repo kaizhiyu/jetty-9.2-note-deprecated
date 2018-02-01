@@ -21,9 +21,16 @@ package org.eclipse.jetty.webapp;
 /**
  * DescriptorProcessor
  *
- *
+ * 描述处理器
  */
-public interface DescriptorProcessor
-{
+public interface DescriptorProcessor {
+
+    /**
+     * 处理
+     *
+     * @param context
+     * @param descriptor
+     * @throws Exception
+     */
     public void process (WebAppContext context, Descriptor descriptor) throws Exception;
 }
