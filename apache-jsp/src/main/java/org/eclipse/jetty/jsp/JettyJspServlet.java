@@ -35,42 +35,45 @@ import org.eclipse.jetty.util.resource.Resource;
  * Wrapper for the jsp servlet that handles receiving requests mapped from 
  * jsp-property-groups. Mappings could be wildcard urls like "/*", which would
  * include welcome files, but we need those to be handled by the DefaultServlet.
+ *
+ * 基于jetty的JspServlet
  */
-public class JettyJspServlet extends JspServlet
-{
+public class JettyJspServlet extends JspServlet {
 
     /**
      * 
      */
     private static final long serialVersionUID = -5387857473125086791L;
 
-    
-    
-    
-    
+    /**
+     * 执行
+     *
+     * @param req
+     * @param resp
+     * @throws ServletException
+     * @throws IOException
+     */
     @Override
-    public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
-    {
+    public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpServletRequest request = null;
-        if (req instanceof HttpServletRequest)
+
+        // 只处理http请求
+        if (req instanceof HttpServletRequest) {
             request = (HttpServletRequest)req;
-        else
+        } else {
             throw new ServletException("Request not HttpServletRequest");
+        }
 
         String servletPath=null;
         String pathInfo=null;
-        if (request.getAttribute("javax.servlet.include.request_uri")!=null)
-        {
+        if (request.getAttribute("javax.servlet.include.request_uri") != null) {
             servletPath=(String)request.getAttribute("javax.servlet.include.servlet_path");
             pathInfo=(String)request.getAttribute("javax.servlet.include.path_info");
-            if (servletPath==null)
-            {
+            if (servletPath==null) {
                 servletPath=request.getServletPath();
                 pathInfo=request.getPathInfo();
             }
-        }
-        else
-        {
+        } else {
             servletPath = request.getServletPath();
             pathInfo = request.getPathInfo();
         }
@@ -81,21 +84,16 @@ public class JettyJspServlet extends JspServlet
 
         //if this is a forced-path from a jsp-file, we want the jsp servlet to handle it,
         //otherwise the default servlet might handle it
-        if (jspFile == null)
-        {
-            if (pathInContext.endsWith("/"))
-            {
+        if (jspFile == null) {
+            if (pathInContext.endsWith("/")) {
                 //dispatch via forward to the default servlet
                 getServletContext().getNamedDispatcher("default").forward(req, resp);
                 return;
-            }
-            else
-            {      
+            } else {
                 //check if it resolves to a directory
                 Resource resource = ((ContextHandler.Context)getServletContext()).getContextHandler().getResource(pathInContext);    
 
-                if (resource!=null && resource.isDirectory())
-                {
+                if (resource!=null && resource.isDirectory()) {
                     //dispatch via forward to the default servlet
                     getServletContext().getNamedDispatcher("default").forward(req, resp);
                     return;
