@@ -25,18 +25,19 @@ import javax.naming.Name;
 import javax.naming.NameParser;
 import javax.naming.NamingException;
 
-
 /**
  * javaNameParser
  *
+ * Java命名解析器
  */
-public class javaNameParser implements NameParser
-{
+public class javaNameParser implements NameParser {
 
+    /**
+     * 语法
+     */
     static Properties syntax = new Properties();
 
-    static
-    {
+    static {
       syntax.put("jndi.syntax.direction", "left_to_right");
       syntax.put("jndi.syntax.separator", "/");
       syntax.put("jndi.syntax.ignorecase", "false");
@@ -44,13 +45,15 @@ public class javaNameParser implements NameParser
 
    /**
     * Parse a name into its components.
+    *
+    * 解析内容
+    *
     * @param  name The non-null string name to parse.
     * @return A non-null parsed form of the name using the naming convention
     * of this parser.
     * @exception NamingException If a naming exception was encountered.
     */
-   public Name parse(String name) throws NamingException
-   {
+   public Name parse(String name) throws NamingException {
       return new CompoundName(name, syntax);
    }
 
