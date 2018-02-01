@@ -63,9 +63,13 @@ import org.eclipse.jetty.xml.XmlConfiguration;
  *
  * Combine jetty classes into a single executable jar and run webapps based on the args to it.
  *
+ * 合并jetty的类到一个独立的可执行jar中
+ * 并且运行webapps目录的文件
  */
-public class Runner
-{
+public class Runner {
+    /**
+     * 日志类
+     */
     private static final Logger LOG = Log.getLogger(Runner.class);
 
     public static final String[] __plusConfigurationClasses = new String[] {
@@ -77,56 +81,101 @@ public class Runner
             org.eclipse.jetty.plus.webapp.PlusConfiguration.class.getCanonicalName(),
             org.eclipse.jetty.annotations.AnnotationConfiguration.class.getCanonicalName(),
             org.eclipse.jetty.webapp.JettyWebXmlConfiguration.class.getCanonicalName()
-            };
+    };
+
+    /**
+     *
+     */
     public static final String __containerIncludeJarPattern =  ".*/jetty-runner-[^/]*\\.jar$";
+
+    /**
+     * 默认的上下文路径
+     */
     public static final String __defaultContextPath = "/";
+
+    /**
+     * 默认的端口
+     */
     public static final int __defaultPort = 8080;
 
+    /**
+     * 服务器类
+     */
     protected Server _server;
+
+    /**
+     * 类加载器
+     */
     protected URLClassLoader _classLoader;
+
+    /**
+     * 类路径
+     */
     protected Classpath _classpath = new Classpath();
+
+    /**
+     * 上下文处理器列表
+     */
     protected ContextHandlerCollection _contexts;
+
+    /**
+     * 请求日志处理器
+     */
     protected RequestLogHandler _logHandler;
+
+    /**
+     * 日志文件
+     */
     protected String _logFile;
+
+    /**
+     * 配置文件列表
+     */
     protected ArrayList<String> _configFiles;
+
+    /**
+     *
+     */
     protected boolean _enableStats=false;
+
+    /**
+     *
+     */
     protected String _statsPropFile;
 
 
 
     /**
      * Classpath
-     *
-     *
+     * 类路径
      */
-    public class Classpath
-    {
+    public class Classpath {
+
+        // 类路径列表
         private  List<URL> _classpath = new ArrayList<>();
 
-        public void addJars (Resource lib) throws IOException
-        {
-            if (lib == null || !lib.exists())
+        public void addJars (Resource lib) throws IOException {
+            // 添加的资源不存在
+            if (lib == null || !lib.exists()) {
                 throw new IllegalStateException ("No such lib: "+lib);
+            }
 
             String[] list = lib.list();
-            if (list==null)
+            if (list==null) {
                 return;
+            }
 
-            for (String path : list)
-            {
-                if (".".equals(path) || "..".equals(path))
+            for (String path : list) {
+                if (".".equals(path) || "..".equals(path)) {
                     continue;
+                }
 
-                try(Resource item = lib.addPath(path))
-                {
-                    if (item.isDirectory())
+                try(Resource item = lib.addPath(path)) {
+                    if (item.isDirectory()) {
                         addJars(item);
-                    else
-                    {
+                    } else {
                         String lowerCasePath = path.toLowerCase(Locale.ENGLISH);
-                        if (lowerCasePath.endsWith(".jar") ||
-                            lowerCasePath.endsWith(".zip"))
-                        {
+                        if (lowerCasePath.endsWith(".jar") || lowerCasePath.endsWith(".zip")) {
                             URL url = item.getURL();
                             _classpath.add(url);
                         }
@@ -136,41 +185,38 @@ public class Runner
         }
 
 
-        public void addPath (Resource path)
-        {
-            if (path == null || !path.exists())
+        public void addPath (Resource path) {
+            if (path == null || !path.exists()) {
                 throw new IllegalStateException ("No such path: "+path);
+            }
             _classpath.add(path.getURL());
         }
 
 
-        public URL[] asArray ()
-        {
+        public URL[] asArray () {
             return _classpath.toArray(new URL[_classpath.size()]);
         }
     }
 
 
-
-
     /**
-     *
+     * 构造方法
      */
-    public Runner()
-    {
-
+    public Runner() {
     }
 
 
     /**
      * Generate helpful usage message and exit
      *
+     * 打印帮助信息并且退出
+     *
      * @param error
      */
-    public void usage(String error)
-    {
-        if (error!=null)
+    public void usage(String error) {
+        if (error != null) {
             System.err.println("ERROR: "+error);
+        }
         System.err.println("Usage: java [-Djetty.home=dir] -jar jetty-runner.jar [--help|--version] [ server opts] [[ context opts] context ...] ");
         System.err.println("Server opts:");
         System.err.println(" --version                           - display version and exit");
@@ -193,10 +239,11 @@ public class Runner
 
     /**
      * Generate version message and exit
+     *
+     * 生成版本信息并且退出
      */
-    public void version ()
-    {
-        System.err.println("org.eclipse.jetty.runner.Runner: "+Server.getVersion());
+    public void version () {
+        System.err.println("org.eclipse.jetty.runner.Runner: " + Server.getVersion());
         System.exit(1);
     }
 
@@ -205,45 +252,42 @@ public class Runner
     /**
      * Configure a jetty instance and deploy the webapps presented as args
      *
+     * 配置
+     *
      * @param args
      * @throws Exception
      */
-    public void configure(String[] args) throws Exception
-    {
+    public void configure(String[] args) throws Exception {
         // handle classpath bits first so we can initialize the log mechanism.
-        for (int i=0;i<args.length;i++)
-        {
-            if ("--lib".equals(args[i]))
-            {
-                try(Resource lib = Resource.newResource(args[++i]))
-                {
-                    if (!lib.exists() || !lib.isDirectory())
+        for (int i=0;i<args.length;i++) {
+            if ("--lib".equals(args[i])) {
+                try(Resource lib = Resource.newResource(args[++i])) {
+                    if (!lib.exists() || !lib.isDirectory()) {
                         usage("No such lib directory "+lib);
+                    }
                     _classpath.addJars(lib);
                 }
-            }
-            else if ("--jar".equals(args[i]))
-            {
-                try(Resource jar = Resource.newResource(args[++i]))
-                {
-                    if (!jar.exists() || jar.isDirectory())
+            } else if ("--jar".equals(args[i])) {
+                try(Resource jar = Resource.newResource(args[++i])) {
+                    if (!jar.exists() || jar.isDirectory()) {
                         usage("No such jar "+jar);
+                    }
                     _classpath.addPath(jar);
                 }
-            }
-            else if ("--classes".equals(args[i]))
-            {
-                try(Resource classes = Resource.newResource(args[++i]))
-                {
-                    if (!classes.exists() || !classes.isDirectory())
+            } else if ("--classes".equals(args[i])) {
+                try(Resource classes = Resource.newResource(args[++i])) {
+                    if (!classes.exists() || !classes.isDirectory()) {
                         usage("No such classes directory "+classes);
+                    }
                     _classpath.addPath(classes);
                 }
-            }
-            else if (args[i].startsWith("--"))
+            } else if (args[i].startsWith("--")) {
+                // 忽略其他配置项
                 i++;
+            }
         }
 
+        // 处理类加载器
         initClassLoader();
 
         LOG.info("Runner");
@@ -258,10 +302,8 @@ public class Runner
 
         boolean runnerServerInitialized = false;
 
-        for (int i=0;i<args.length;i++)
-        {
-            switch (args[i])
-            {
+        for (int i=0 ; i<args.length; i++) {
+            switch (args[i]) {
                 case "--port":
                     port = Integer.parseInt(args[++i]);
                     break;
@@ -289,21 +331,19 @@ public class Runner
                     contextPathSet = true;
                     break;
                 case "--config":
-                    if (_configFiles == null)
+                    if (_configFiles == null) {
                         _configFiles = new ArrayList<>();
+                    }
                     _configFiles.add(args[++i]);
                     break;
                 case "--lib":
                     ++i;//skip
-
                     break;
                 case "--jar":
                     ++i; //skip
-
                     break;
                 case "--classes":
                     ++i;//skip
-
                     break;
                 case "--stats":
                     _enableStats = true;
@@ -311,21 +351,17 @@ public class Runner
                     _statsPropFile = ("unsecure".equalsIgnoreCase(_statsPropFile) ? null : _statsPropFile);
                     break;
                 default:
-// process contexts
-
-                    if (!runnerServerInitialized) // log handlers not registered, server maybe not created, etc
-                    {
-                        if (_server == null) // server not initialized yet
-                        {
+                    if (!runnerServerInitialized) {
+                        // log handlers not registered, server maybe not created, etc
+                        if (_server == null) {
+                            // server not initialized yet
                             // build the server
                             _server = new Server();
                         }
 
                         //apply jetty config files if there are any
-                        if (_configFiles != null)
-                        {
-                            for (String cfg : _configFiles)
-                            {
+                        if (_configFiles != null) {
+                            for (String cfg : _configFiles) {
                                 try (Resource resource = Resource.newResource(cfg)) {
                                     XmlConfiguration xmlConfiguration = new XmlConfiguration(resource.getURL());
                                     xmlConfiguration.configure(_server);
@@ -335,38 +371,32 @@ public class Runner
 
                         //check that everything got configured, and if not, make the handlers
                         HandlerCollection handlers = (HandlerCollection) _server.getChildHandlerByClass(HandlerCollection.class);
-                        if (handlers == null)
-                        {
+                        if (handlers == null) {
                             handlers = new HandlerCollection();
                             _server.setHandler(handlers);
                         }
 
                         //check if contexts already configured
                         _contexts = (ContextHandlerCollection) handlers.getChildHandlerByClass(ContextHandlerCollection.class);
-                        if (_contexts == null)
-                        {
+                        if (_contexts == null) {
                             _contexts = new ContextHandlerCollection();
                             prependHandler(_contexts, handlers);
                         }
 
 
-                        if (_enableStats)
-                        {
+                        if (_enableStats) {
                             //if no stats handler already configured
                             if (handlers.getChildHandlerByClass(StatisticsHandler.class) == null) {
                                 StatisticsHandler statsHandler = new StatisticsHandler();
-
 
                                 Handler oldHandler = _server.getHandler();
                                 statsHandler.setHandler(oldHandler);
                                 _server.setHandler(statsHandler);
 
-
                                 ServletContextHandler statsContext = new ServletContextHandler(_contexts, "/stats");
                                 statsContext.addServlet(new ServletHolder(new StatisticsServlet()), "/");
                                 statsContext.setSessionHandler(new SessionHandler());
-                                if (_statsPropFile != null)
-                                {
+                                if (_statsPropFile != null) {
                                     HashLoginService loginService = new HashLoginService("StatsRealm", _statsPropFile);
                                     Constraint constraint = new Constraint();
                                     constraint.setName("Admin Only");
@@ -387,15 +417,15 @@ public class Runner
                         }
 
                         //ensure a DefaultHandler is present
-                        if (handlers.getChildHandlerByClass(DefaultHandler.class) == null)
-                        {
+                        // 确保至少有一个处理器
+                        if (handlers.getChildHandlerByClass(DefaultHandler.class) == null) {
                             handlers.addHandler(new DefaultHandler());
                         }
 
                         //ensure a log handler is present
+                        // 确保有一个日志处理器
                         _logHandler = (RequestLogHandler) handlers.getChildHandlerByClass(RequestLogHandler.class);
-                        if (_logHandler == null)
-                        {
+                        if (_logHandler == null) {
                             _logHandler = new RequestLogHandler();
                             handlers.addHandler(_logHandler);
                         }
@@ -403,22 +433,19 @@ public class Runner
 
                         //check a connector is configured to listen on
                         Connector[] connectors = _server.getConnectors();
-                        if (connectors == null || connectors.length == 0)
-                        {
+                        if (connectors == null || connectors.length == 0) {
                             ServerConnector connector = new ServerConnector(_server);
                             connector.setPort(port);
-                            if (host != null)
+                            if (host != null) {
                                 connector.setHost(host);
+                            }
                             _server.addConnector(connector);
-                            if (_enableStats)
+                            if (_enableStats) {
                                 connector.addBean(new ConnectorStatistics());
-                        }
-                        else
-                        {
-                            if (_enableStats)
-                            {
-                                for (Connector connector : connectors)
-                                {
+                            }
+                        } else {
+                            if (_enableStats) {
+                                for (Connector connector : connectors) {
                                     ((AbstractConnector) connector).addBean(new ConnectorStatistics());
                                 }
                             }
@@ -428,29 +455,31 @@ public class Runner
                     }
 
                     // Create a context
-                    try (Resource ctx = Resource.newResource(args[i]))
-                    {
-                        if (!ctx.exists())
+                    try (Resource ctx = Resource.newResource(args[i])) {
+                        if (!ctx.exists()) {
                             usage("Context '" + ctx + "' does not exist");
+                        }
 
-                        if (contextPathSet && !(contextPath.startsWith("/")))
+                        if (contextPathSet && !(contextPath.startsWith("/"))) {
                             contextPath = "/" + contextPath;
+                        }
 
                         // Configure the context
-                        if (!ctx.isDirectory() && ctx.toString().toLowerCase(Locale.ENGLISH).endsWith(".xml"))
-                        {
+                        // 配置上下文
+                        if (!ctx.isDirectory() && ctx.toString().toLowerCase(Locale.ENGLISH).endsWith(".xml")) {
                             // It is a context config file
+                            // 可以接受一个目录下的.xml文件
                             XmlConfiguration xmlConfiguration = new XmlConfiguration(ctx.getURL());
                             xmlConfiguration.getIdMap().put("Server", _server);
                             ContextHandler handler = (ContextHandler) xmlConfiguration.configure();
                             if (contextPathSet)
                                 handler.setContextPath(contextPath);
                             _contexts.addHandler(handler);
-                            handler.setAttribute("org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern", __containerIncludeJarPattern);
-                        }
-                        else
-                        {
+                            handler.setAttribute("org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern",
+                                    __containerIncludeJarPattern);
+                        } else {
                             // assume it is a WAR file
+                            // 也可以接受一个war包
                             WebAppContext webapp = new WebAppContext(_contexts, ctx.toString(), contextPath);
                             webapp.setConfigurationClasses(__plusConfigurationClasses);
                             webapp.setAttribute("org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern",
@@ -464,12 +493,12 @@ public class Runner
             }
         }
 
-        if (_server==null)
+        if (_server == null) {
             usage("No Contexts defined");
+        }
         _server.setStopAtShutdown(true);
 
-        switch ((stopPort > 0 ? 1 : 0) + (stopKey != null ? 2 : 0))
-        {
+        switch ((stopPort > 0 ? 1 : 0) + (stopKey != null ? 2 : 0)) {
             case 1:
                 usage("Must specify --stop-key when --stop-port is specified");
                 break;
@@ -486,8 +515,7 @@ public class Runner
                 break;
         }
 
-        if (_logFile!=null)
-        {
+        if (_logFile!=null) {
             NCSARequestLog requestLog = new NCSARequestLog(_logFile);
             requestLog.setExtended(false);
             _logHandler.setRequestLog(requestLog);
@@ -496,13 +524,15 @@ public class Runner
 
 
     /**
+     * 处理器执行之前
+     *
      * @param handler
      * @param handlers
      */
-    protected void prependHandler (Handler handler, HandlerCollection handlers)
-    {
-        if (handler == null || handlers == null)
+    protected void prependHandler (Handler handler, HandlerCollection handlers) {
+        if (handler == null || handlers == null) {
             return;
+        }
 
        Handler[] existing = handlers.getChildHandlers();
        Handler[] children = new Handler[existing.length + 1];
@@ -511,67 +541,57 @@ public class Runner
        handlers.setHandlers(children);
     }
 
-
-
-
     /**
+     * 启动
+     *
      * @throws Exception
      */
-    public void run() throws Exception
-    {
+    public void run() throws Exception {
         _server.start();
         _server.join();
     }
 
-
     /**
+     * 初始化类加载器
+     *
      * Establish a classloader with custom paths (if any)
      */
-    protected void initClassLoader()
-    {
+    protected void initClassLoader() {
         URL[] paths = _classpath.asArray();
 
-        if (_classLoader==null && paths !=null && paths.length > 0)
-        {
-            ClassLoader context=Thread.currentThread().getContextClassLoader();
+        if (_classLoader == null && paths !=null && paths.length > 0) {
+            ClassLoader context = Thread.currentThread().getContextClassLoader();
 
-            if (context==null)
+            if (context==null) {
                 _classLoader=new URLClassLoader(paths);
-            else
+            } else {
                 _classLoader=new URLClassLoader(paths, context);
+            }
 
             Thread.currentThread().setContextClassLoader(_classLoader);
         }
     }
 
-
-
-
     /**
+     * 启动方法
+     *
      * @param args
      */
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         Runner runner = new Runner();
 
-        try
-        {
-            if (args.length>0&&args[0].equalsIgnoreCase("--help"))
-            {
+        try {
+            if (args.length > 0 && args[0].equalsIgnoreCase("--help")) {
+                // 打印帮助信息并退出
                 runner.usage(null);
-            }
-            else if (args.length>0&&args[0].equalsIgnoreCase("--version"))
-            {
+            } else if (args.length > 0 && args[0].equalsIgnoreCase("--version")) {
+                // 打印版本信息并退出
                 runner.version();
-            }
-            else
-            {
+            } else {
                 runner.configure(args);
                 runner.run();
             }
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
             runner.usage(null);
         }
