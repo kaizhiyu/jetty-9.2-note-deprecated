@@ -26,21 +26,35 @@ import java.io.EOFException;
  * <p> This is thrown by Jetty to distinguish between EOF received from 
  * the connection, vs and EOF thrown by some application talking to some other file/socket etc.
  * The only difference in handling is that Jetty EOFs are logged less verbosely.
+ *
+ * 基于jetty的特殊的EOF异常
+ *
  */
-public class EofException extends EOFException
-{
-    public EofException()
-    {
+public class EofException extends EOFException {
+
+    /**
+     * 构造方法
+     */
+    public EofException() {
     }
-    
-    public EofException(String reason)
-    {
+
+    /**
+     * 构造方法
+     *
+     * @param reason
+     */
+    public EofException(String reason) {
         super(reason);
     }
-    
-    public EofException(Throwable th)
-    {
-        if (th!=null)
+
+    /**
+     * 构造方法
+     *
+     * @param th
+     */
+    public EofException(Throwable th) {
+        if (th!=null) {
             initCause(th);
+        }
     }
 }
