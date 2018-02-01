@@ -29,25 +29,36 @@ import org.eclipse.jetty.webapp.WebAppContext;
 
 /**
  * Perform some basic weld configuration of WebAppContext
+ *
+ * Jetty对cdi/weld的支持
  */
-public class WeldDeploymentBinding implements AppLifeCycle.Binding
-{
-    public String[] getBindingTargets()
-    {
-        return new String[]
-        { "deploying" };
+public class WeldDeploymentBinding implements AppLifeCycle.Binding {
+
+    /**
+     * 获取绑定对象
+     *
+     * @return
+     */
+    public String[] getBindingTargets() {
+        return new String[] { "deploying" };
     }
 
-    public void processBinding(Node node, App app) throws Exception
-    {
+    /**
+     * 执行绑定
+     *
+     * @param node
+     *            the node being processed
+     * @param app
+     *            the app being processed
+     * @throws Exception
+     */
+    public void processBinding(Node node, App app) throws Exception {
         ContextHandler handler = app.getContextHandler();
-        if (handler == null)
-        {
+        if (handler == null) {
             throw new NullPointerException("No Handler created for App: " + app);
         }
 
-        if (handler instanceof WebAppContext)
-        {
+        if (handler instanceof WebAppContext) {
             WebAppContext webapp = (WebAppContext)handler;
 
             // Add context specific weld container reference.
